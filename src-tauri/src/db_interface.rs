@@ -96,8 +96,11 @@ pub async fn fetch_entity_by_id(pool: &Pool<MySql>, id: u32) -> Result<EavEntity
 }
 
 pub async fn create_entity(pool: &Pool<MySql>, entity_type: &str, entity: &str) -> Result<EavEntity, sqlx::Error> {
-	sqlx::query("CALL create_eav_entity(?, ?)").bind(entity_type).bind(entity).execute(pool).await?;
+	let debug = sqlx::query("CALL create_eav_entity(?, ?)").bind(entity_type).bind(entity).execute(pool).await?;
+	// note: execute is not waiting for transaction to finish before returning
+	async_std::task::sleep(Duration::from_millis(10)).await;
 	let id = get_last_id(pool).await?;
+	println!("create_entity: {:?} -> {}", debug, id);
 	let res = fetch_entity_by_id(pool, id).await?;
 	Ok(res)
 }
@@ -111,7 +114,7 @@ pub async fn delete_entity(pool: &Pool<MySql>, entity_type: &str, entity: &str) 
 
 // -- ATTRIBUTES --
 pub async fn fetch_attr_by_id(pool: &Pool<MySql>, id: u32) -> Result<EavAttribute, sqlx::Error> {
-	let res = sqlx::query_as::<_, EavAttribute>("SELECT * FROM eav_attrs WHERE id = (?)")
+	let res = sqlx::query_as::<_, EavAttribute>("SELECT * FROM eav_attrs WHERE id = ?")
 		.bind(id.to_string())
 		.fetch_one(pool)
 		.await?;
@@ -121,10 +124,13 @@ pub async fn fetch_attr_by_id(pool: &Pool<MySql>, id: u32) -> Result<EavAttribut
 pub async fn create_attr(
 	pool: &Pool<MySql>, entity_type_id: u32, attr_name: &str, attr_type: &str, allow_multiple: bool
 ) -> Result<EavAttribute, sqlx::Error> {
-	sqlx::query("CALL create_eav_attr(?, ?, ?, ?)")
+	let debug = sqlx::query("CALL create_eav_attr(?, ?, ?, ?)")
 		.bind(attr_name).bind(attr_type).bind(entity_type_id).bind(allow_multiple)
 		.execute(pool).await?;
+	// note: execute is not waiting for transaction to finish before returning
+	async_std::task::sleep(Duration::from_millis(10)).await;
 	let id = get_last_id(pool).await?;
+	println!("create_attr: {:?} -> {}", debug, id);
 	let res = fetch_attr_by_id(pool, id).await?;
 	Ok(res)
 }
@@ -138,7 +144,7 @@ pub async fn delete_attr(pool: &Pool<MySql>, id: u32) -> Result<String, sqlx::Er
 
 // -- VALUES --
 pub async fn fetch_value_by_id(pool: &Pool<MySql>, id: u32) -> Result<EavValue, sqlx::Error> {
-	let res = sqlx::query_as::<_, EavValue>("SELECT * FROM eav_values WHERE id = (?)")
+	let res = sqlx::query_as::<_, EavValue>("SELECT * FROM eav_values WHERE id = ?")
 		.bind(id.to_string())
 		.fetch_one(pool)
 		.await?;
@@ -150,6 +156,8 @@ pub async fn create_value(pool: &Pool<MySql>, input: EavValue) -> Result<EavValu
 		.bind(input.entity_id).bind(input.attr_id).bind(input.value_str).bind(input.value_int)
 		.bind(input.value_float).bind(input.value_time).bind(input.value_bool)
 		.execute(pool).await?;
+	// note: execute is not waiting for transaction to finish before returning
+	async_std::task::sleep(Duration::from_millis(10)).await;
 	let id = get_last_id(pool).await?;
 	let res = fetch_value_by_id(pool, id).await?;
 	Ok(res)
@@ -162,6 +170,8 @@ pub async fn update_value(pool: &Pool<MySql>, input: EavValue) -> Result<EavValu
 	sqlx::query(&query).bind(input.value_str).bind(input.value_int).bind(input.value_float)
 		.bind(input.value_time).bind(input.value_bool).bind(input.id)
 		.execute(pool).await?;
+	// note: execute is not waiting for transaction to finish before returning
+	async_std::task::sleep(Duration::from_millis(10)).await;
 	let id = get_last_id(pool).await?;
 	let res = fetch_value_by_id(pool, id).await?;
 	Ok(res)

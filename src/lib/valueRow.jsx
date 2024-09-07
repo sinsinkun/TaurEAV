@@ -70,7 +70,7 @@ const ValueRow = ({ data }) => {
       case "float":
         if (data.value_float || data.value_float === 0) {
           if (!data.allow_multiple) setFValue(data.value_float);
-          setDValue(String(data.value_float));
+          setDValue(data.value_float.toFixed(2));
         } else {
           setDValue("-");
         }

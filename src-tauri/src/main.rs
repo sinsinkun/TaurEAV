@@ -57,7 +57,7 @@ async fn fetch_entity_types(state: State<'_, TState>) -> Result<Vec<EavEntityTyp
     match db_interface::fetch_entity_types(&pool).await {
         Ok(v) => Ok(v),
         Err(e) => {
-            println!("Failed to fetch: {:?}", e);
+            println!("Failed to fetch entity types: {:?}", e);
             Err("ERR".to_string())
         }
     }
@@ -69,7 +69,7 @@ async fn fetch_entities(state: State<'_, TState>, entity_type_id: u32) -> Result
     match db_interface::fetch_entities(&pool, entity_type_id).await {
         Ok(v) => Ok(v),
         Err(e) => {
-            println!("Failed to fetch: {:?}", e);
+            println!("Failed to fetch entities: {:?}", e);
             Err("ERR".to_string())
         }
     }
@@ -81,25 +81,25 @@ async fn fetch_values(state: State<'_, TState>, entity_id: u32) -> Result<Vec<Ea
     match db_interface::fetch_views_by_entity_id(&pool, entity_id).await {
         Ok(v) => Ok(v),
         Err(e) => {
-            println!("Failed to fetch: {:?}", e);
+            println!("Failed to fetch views: {:?}", e);
             Err("ERR".to_string())
         }
     }
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 async fn create_entity(state: State<'_, TState>, entity_type: String, entity: String) -> Result<EavEntity, String> {
     let pool = state.get_db().await?;
     match db_interface::create_entity(&pool, &entity_type, &entity).await {
         Ok(v) => Ok(v),
         Err(e) => {
-            println!("Failed to fetch: {:?}", e);
+            println!("Failed to create entity: {:?}", e);
             Err("ERR".to_string())
         }
     }
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 async fn create_attr(
     state: State<'_, TState>, entity_type_id: u32, attr_name: &str, attr_type: &str, allow_multiple: bool
 ) -> Result<EavAttribute, String> {
@@ -107,31 +107,31 @@ async fn create_attr(
     match db_interface::create_attr(&pool, entity_type_id, attr_name, attr_type, allow_multiple).await {
         Ok(v) => Ok(v),
         Err(e) => {
-            println!("Failed to fetch: {:?}", e);
+            println!("Failed to create attr: {:?}", e);
             Err("ERR".to_string())
         }
     }
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 async fn create_value(state: State<'_, TState>, input: EavValue) -> Result<EavValue, String> {
     let pool = state.get_db().await?;
     match db_interface::create_value(&pool, input).await {
         Ok(v) => Ok(v),
         Err(e) => {
-            println!("Failed to fetch: {:?}", e);
+            println!("Failed to create value: {:?}", e);
             Err("ERR".to_string())
         }
     }
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 async fn update_value(state: State<'_, TState>, input: EavValue) -> Result<EavValue, String> {
     let pool = state.get_db().await?;
     match db_interface::update_value(&pool, input).await {
         Ok(v) => Ok(v),
         Err(e) => {
-            println!("Failed to fetch: {:?}", e);
+            println!("Failed to update value: {:?}", e);
             Err("ERR".to_string())
         }
     }
@@ -139,8 +139,7 @@ async fn update_value(state: State<'_, TState>, input: EavValue) -> Result<EavVa
 
 fn main() {
     // launch SQL server
-    Command::new("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqld.exe")
-        .arg("--wait-timeout=1000").spawn().expect("Command Err");
+    Command::new("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqld.exe").spawn().expect("Command Err");
     // configure tauri
     tauri::Builder::default()
         .manage(TState { db: Mutex::new(None) })

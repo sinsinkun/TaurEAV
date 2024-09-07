@@ -58,15 +58,14 @@ export const addAttribute = createAsyncThunk(
   'eav/addAttribute',
   async (input, { rejectWithValue }) => {
     try {
-      const { attr, valueType, entityType } = input;
-      if (!attr || !valueType, !entityType) throw new Error("Missing required inputs");
-      const res = await fetch("http://localhost:4000/attribute", {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(input),
-      }).then(x => x.json());
+      const { attr, value_type, entity_type_id, allow_multiple } = input;
+      if (!attr || !value_type || !entity_type_id) throw new Error("Missing required inputs");
+      const res = await invoke("create_attr", { 
+        entity_type_id, 
+        attr_name: attr, 
+        attr_type: value_type, 
+        allow_multiple,
+      });
       return res;
     } catch (e) {
       console.error("API failed -", e);
@@ -79,15 +78,9 @@ export const addEntity = createAsyncThunk(
   'eav/addEntity',
   async (input, { rejectWithValue }) => {
     try {
-      const { entity, entityType } = input;
-      if (!entity || !entityType) throw new Error("Missing required inputs");
-      const res = await fetch("http://localhost:4000/entity", {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(input),
-      }).then(x => x.json());
+      const { entity, entity_type } = input;
+      if (!entity || !entity_type) throw new Error("Missing required inputs");
+      const res = await invoke("create_entity", { entity, entity_type });
       return res;
     } catch (e) {
       console.error("API failed -", e);

@@ -22,8 +22,8 @@ const FormModal = () => {
     e.preventDefault();
     if (!activeEnType) return setErr("No active tab");
     const form = { ...fields };
-    form.entityType = activeEnType.entityType;
-    form.entityTypeId = activeEnType.id;
+    form.entity_type = activeEnType.entity_type;
+    form.entity_type_id = activeEnType.id;
     if (formType === "entity") {
       if (!form.entity) return setErr("No name specified");
       dispatch(addEntity(form));
