@@ -82,11 +82,11 @@ const FormModal = () => {
         <label htmlFor="value_type">Value Type</label>
         <select name="value_type" onChange={handleInput}>
           <option value=""></option>
-          <option value="STR">String</option>
-          <option value="INT">Integer</option>
-          <option value="FLOAT">Float</option>
-          <option value="TIME">Time</option>
-          <option value="BOOL">Boolean</option>
+          <option value="str">String</option>
+          <option value="int">Integer</option>
+          <option value="float">Float</option>
+          <option value="time">Time</option>
+          <option value="bool">Boolean</option>
         </select>
         <div style={{ display: "flex", alignItems: "center" }}>
           <label htmlFor="allow_multiple">Allow Multiple</label>

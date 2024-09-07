@@ -107,3 +107,10 @@ pub async fn delete_entity(pool: &Pool<MySql>, entity_type: &str, entity: &str) 
 // -- VALUES --
 
 // -- VIEWS --
+pub async fn fetch_views_by_entity_id(pool: &Pool<MySql>, entity_id: u32) -> Result<Vec<EavView>, sqlx::Error> {
+	let rows = sqlx::query_as::<_, EavView>("SELECT * FROM all_possible_eav_data WHERE entity_id = ?")
+		.bind(entity_id.to_string())
+		.fetch_all(pool)
+		.await?;
+	Ok(rows)
+}

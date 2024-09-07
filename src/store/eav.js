@@ -45,9 +45,7 @@ export const fetchValues = createAsyncThunk(
   'eav/fetchValues',
   async (entityId, { rejectWithValue }) => {
     try {
-      const res = await fetch("http://localhost:4000/view/entity/" + entityId, {
-        method: "GET",
-      }).then(x => x.json());
+      const res = await invoke("fetch_values", { entityId });
       return res;
     } catch (e) {
       console.error("API failed -", e);
@@ -203,7 +201,6 @@ export const eavSlice = createSlice({
     }).addCase(fetchEntities.fulfilled, (state, action) => {
       state.loading = false;
       state.entities = action.payload;
-      console.log("entities", action.payload);
       state.activeEntity = null;
     }).addCase(fetchEntities.rejected, (state) => {
       state.loading = false;

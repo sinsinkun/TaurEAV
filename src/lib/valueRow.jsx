@@ -13,19 +13,19 @@ const ValueRow = ({ data }) => {
     if (!fvalue && fvalue !== 0) return setIsEditing(false);
     const form = { ...data };
     switch (data.value_type) {
-      case "STR":
+      case "str":
         form.value_str = fvalue;
         break;
-      case "INT":
+      case "int":
         form.value_int = fvalue;
         break;
-      case "FLOAT":
+      case "float":
         form.value_float = fvalue;
         break;
-      case "TIME":
+      case "time":
         form.value_time = fvalue;
         break;
-      case "BOOL":
+      case "bool":
         form.value_bool = fvalue;
         break;
       default:
@@ -51,7 +51,7 @@ const ValueRow = ({ data }) => {
 
   useEffect(() => {
     switch (data.value_type) {
-      case "STR":
+      case "str":
         if (data.value_str) {
           if (!data.allow_multiple) setFValue(data.value_str);
           setDValue(data.value_str);
@@ -59,7 +59,7 @@ const ValueRow = ({ data }) => {
           setDValue("-");
         }
         break;
-      case "INT":
+      case "int":
         if (data.value_int || data.value_int === 0) {
           if (!data.allow_multiple) setFValue(data.value_int);
           setDValue(String(data.value_int));
@@ -67,7 +67,7 @@ const ValueRow = ({ data }) => {
           setDValue("-")
         }
         break;
-      case "FLOAT":
+      case "float":
         if (data.value_float || data.value_float === 0) {
           if (!data.allow_multiple) setFValue(data.value_float);
           setDValue(String(data.value_float));
@@ -75,7 +75,7 @@ const ValueRow = ({ data }) => {
           setDValue("-");
         }
         break;
-      case "TIME":
+      case "time":
         if (data.value_time) {
           if (!data.allow_multiple) setFValue(data.valueTime);
           setDValue(data.value_time);
@@ -83,7 +83,7 @@ const ValueRow = ({ data }) => {
           setDValue("-");
         }
         break;
-      case "BOOL":
+      case "bool":
         if (data.value_bool === true) {
           if (!data.allow_multiple) setFValue(true);
           setDValue("Yes");
@@ -104,11 +104,11 @@ const ValueRow = ({ data }) => {
       <div>{data.attr} {data.allow_multiple && "(+)"}</div>
       {isEditing ? (
         <div className="value-field-container">
-          {data.value_type === "STR" && <input type="text" value={fvalue} onChange={handleInput} />}
-          {data.value_type === "INT" && <input type="number" value={fvalue} onChange={handleInput} />}
-          {data.value_type === "FLOAT" && <input type="number" value={fvalue} onChange={handleInput} />}
-          {data.value_type === "TIME" && <input type="datetime-local" value={fvalue} onChange={handleInput} />}
-          {data.value_type === "BOOL" && <input type="checkbox" checked={fvalue} onChange={handleCheck} />}
+          {data.value_type === "str" && <input type="text" value={fvalue} onChange={handleInput} />}
+          {data.value_type === "int" && <input type="number" value={fvalue} onChange={handleInput} />}
+          {data.value_type === "float" && <input type="number" value={fvalue} onChange={handleInput} />}
+          {data.value_type === "time" && <input type="datetime-local" value={fvalue} onChange={handleInput} />}
+          {data.value_type === "bool" && <input type="checkbox" checked={fvalue} onChange={handleCheck} />}
           <div style={{ flexGrow:1 }}></div>
           <button onClick={submitValue}>{data.allow_multiple ? "Add" : "Update"}</button>
           <button onClick={() => setIsEditing(false)}>Cancel</button>

@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use async_std::sync::Mutex;
-use eav_structs::{EavEntityType, EavEntity};
+use eav_structs::{EavEntity, EavEntityType, EavView};
 use std::process::Command;
 use sqlx::{Pool, MySql};
 use tauri::State;
@@ -78,6 +78,27 @@ async fn fetch_entities(state: State<'_, TState>, entity_type_id: u32) -> Result
     }
 }
 
+#[tauri::command]
+async fn fetch_values(state: State<'_, TState>, entity_id: u32) -> Result<Vec<EavView>, String> {
+    let db_ref = state.db.lock().await;
+    let db = db_ref.as_ref();
+    match db {
+        Some(pool) => {
+            match db_interface::fetch_views_by_entity_id(pool, entity_id).await {
+                Ok(v) => Ok(v),
+                Err(e) => {
+                    println!("Failed to fetch: {:?}", e);
+                    Err("ERR".to_string())
+                }
+            }
+        }
+        None => {
+            println!("No DB connection");
+            Err("ERR".to_string())
+        }
+    }
+}
+
 fn main() {
     // launch SQL server
     Command::new("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqld.exe")
@@ -86,7 +107,7 @@ fn main() {
     tauri::Builder::default()
         .manage(TState { db: Mutex::new(None) })
         .invoke_handler(tauri::generate_handler![
-            connect, fetch_entity_types, fetch_entities,
+            connect, fetch_entity_types, fetch_entities, fetch_values,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
