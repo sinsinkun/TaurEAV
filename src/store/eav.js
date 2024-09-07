@@ -20,7 +20,6 @@ export const fetchEntityTypes = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await invoke("fetch_entity_types");
-      console.log(res);
       return res;
     } catch (e) {
       console.error("API failed -", e);
@@ -33,9 +32,7 @@ export const fetchEntities = createAsyncThunk(
   'eav/fetchEntities',
   async (typeId, { rejectWithValue }) => {
     try {
-      const res = await fetch("http://localhost:4000/entities/" + typeId, {
-        method: "GET",
-      }).then(x => x.json());
+      const res = await invoke("fetch_entities", { entityTypeId: typeId });
       return res;
     } catch (e) {
       console.error("API failed -", e);
@@ -196,7 +193,6 @@ export const eavSlice = createSlice({
     }).addCase(fetchEntityTypes.fulfilled, (state, action) => {
       state.loading = false;
       state.entityTypes = action.payload;
-      console.log("loaded", state.entityTypes);
       state.activeEntity = null;
     }).addCase(fetchEntityTypes.rejected, (state) => {
       state.loading = false;
@@ -207,6 +203,7 @@ export const eavSlice = createSlice({
     }).addCase(fetchEntities.fulfilled, (state, action) => {
       state.loading = false;
       state.entities = action.payload;
+      console.log("entities", action.payload);
       state.activeEntity = null;
     }).addCase(fetchEntities.rejected, (state) => {
       state.loading = false;

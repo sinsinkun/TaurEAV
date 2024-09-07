@@ -8,8 +8,7 @@ function App() {
   return (
     <Provider store={store}>
       <div className="container-center">
-        <h2>EAV Data Manager</h2>
-        <br />
+        <h3>EAV Data Manager</h3>
         <EavTable />
       </div>
     </Provider>

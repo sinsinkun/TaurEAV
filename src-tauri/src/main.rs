@@ -2,8 +2,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use async_std::sync::Mutex;
-use eav_structs::EavEntityType;
-// use std::process::Command;
+use eav_structs::{EavEntityType, EavEntity};
+use std::process::Command;
 use sqlx::{Pool, MySql};
 use tauri::State;
 
@@ -15,11 +15,6 @@ struct TState {
 }
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
 #[tauri::command]
 async fn connect(state: State<'_, TState>) -> Result<String, String> {
     let mut db = state.db.lock().await;
@@ -62,13 +57,37 @@ async fn fetch_entity_types(state: State<'_, TState>) -> Result<Vec<EavEntityTyp
     }
 }
 
+#[tauri::command]
+async fn fetch_entities(state: State<'_, TState>, entity_type_id: u32) -> Result<Vec<EavEntity>, String> {
+    let db_ref = state.db.lock().await;
+    let db = db_ref.as_ref();
+    match db {
+        Some(pool) => {
+            match db_interface::fetch_entities(pool, entity_type_id).await {
+                Ok(v) => Ok(v),
+                Err(e) => {
+                    println!("Failed to fetch: {:?}", e);
+                    Err("ERR".to_string())
+                }
+            }
+        }
+        None => {
+            println!("No DB connection");
+            Err("ERR".to_string())
+        }
+    }
+}
+
 fn main() {
-    // let cmd = format!(r#"C:\"Program Files"\MySQL\"MySQL Server 8.0"\bin\mysqld.exe"#);
-    // println!("running: {}", cmd);
-    // Command::new(cmd).arg("--console").spawn().expect("Command Err");
+    // launch SQL server
+    Command::new("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqld.exe")
+        .arg("--console").spawn().expect("Command Err");
+    // configure tauri
     tauri::Builder::default()
         .manage(TState { db: Mutex::new(None) })
-        .invoke_handler(tauri::generate_handler![greet, connect, fetch_entity_types])
+        .invoke_handler(tauri::generate_handler![
+            connect, fetch_entity_types, fetch_entities,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
