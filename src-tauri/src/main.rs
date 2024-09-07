@@ -139,7 +139,8 @@ async fn update_value(state: State<'_, TState>, input: EavValue) -> Result<EavVa
 
 fn main() {
     // launch SQL server
-    Command::new("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqld.exe").spawn().expect("Command Err");
+    Command::new("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqld.exe")
+        .arg("--console").spawn().expect("Command Err");
     // configure tauri
     tauri::Builder::default()
         .manage(TState { db: Mutex::new(None) })
