@@ -93,15 +93,13 @@ export const addValue = createAsyncThunk(
   'eav/addValue',
   async (input, { rejectWithValue }) => {
     try {
-      const { entityId, attrId } = input;
-      if (!entityId || !attrId) throw new Error("Missing required inputs");
-      const res = await fetch("http://localhost:4000/value", {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(input),
-      }).then(x => x.json());
+      const { entity_id, attr_id, value_str, value_int, value_float, value_time, value_bool } = input;
+      if (!entity_id || !attr_id) throw new Error("Missing required inputs");
+      const fnInput = {
+        id: 0, created_at: new Date().toISOString(), entity_id, attr_id, value_str, 
+        value_int: Number(value_int), value_float: Number(value_float), value_time, value_bool
+      }
+      const res = await invoke("create_value", { input: fnInput });
       return res;
     } catch (e) {
       console.error("API failed -", e);
@@ -114,16 +112,13 @@ export const updateValue = createAsyncThunk(
   'eav/updateValue',
   async (input, { rejectWithValue }) => {
     try {
-      const { valueId, valueStr, valueInt, valueFloat, valueTime, valueBool } = input;
-      if (!valueId) throw new Error("Missing required inputs");
-      const body = { id: valueId, valueStr, valueInt, valueFloat, valueTime, valueBool };
-      const res = await fetch("http://localhost:4000/value", {
-        method: "PUT",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      }).then(x => x ? x.json() : {});
+      const { value_id, entity_id, attr_id, value_str, value_int, value_float, value_time, value_bool } = input;
+      if (!value_id) throw new Error("Missing required inputs");
+      const fnInput = {
+        id: value_id, created_at: new Date().toISOString(), entity_id, attr_id, value_str, 
+        value_int: Number(value_int), value_float: Number(value_float), value_time, value_bool
+      }
+      const res = await invoke("update_value", { input: fnInput });
       return res;
     } catch (e) {
       console.error("API failed -", e);
@@ -247,22 +242,22 @@ export const eavSlice = createSlice({
       let addNewRow = false;
       let idx = -1;
       state.values.forEach((v, i) => {
-        if (v.attrId === action.payload.attrId && v.entityId === action.payload.entityId) {
-          if (!v.valueId) idx = i;
-          else if (v.valueId && v.allowMultiple) addNewRow = true; 
+        if (v.attr_id === action.payload.attr_id && v.entity_id === action.payload.entity_id) {
+          if (!v.value_id) idx = i;
+          else if (v.value_id && v.allow_multiple) addNewRow = true; 
         }
       })
       // update existing state
       if (addNewRow) {
         state.values.push(action.payload);
       } else if (idx > -1) {
-        state.values[idx].valueId = action.payload.id;
-        state.values[idx].createdAt = action.payload.createdAt;
-        state.values[idx].valueStr = action.payload.valueStr;
-        state.values[idx].valueInt = action.payload.valueInt;
-        state.values[idx].valueFloat = action.payload.valueFloat;
-        state.values[idx].valueTime = action.payload.valueTime;
-        state.values[idx].valueBool = action.payload.valueBool;
+        state.values[idx].value_id = action.payload.id;
+        state.values[idx].created_at = action.payload.created_at;
+        state.values[idx].value_str = action.payload.value_str;
+        state.values[idx].value_int = action.payload.value_int;
+        state.values[idx].value_float = action.payload.value_float;
+        state.values[idx].value_time = action.payload.value_time;
+        state.values[idx].value_bool = action.payload.value_bool;
       }
     }).addCase(addValue.rejected, (state) => {
       state.loading = false;
@@ -275,8 +270,8 @@ export const eavSlice = createSlice({
       let addNewRow = false;
       let idx = -1;
       state.values.forEach((v, i) => {
-        if (v.attrId === action.payload.attrId && v.entityId === action.payload.entityId) {
-          if (v.allowMultiple) addNewRow = true;
+        if (v.attr_id === action.payload.attr_id && v.entity_id === action.payload.entity_id) {
+          if (v.allow_multiple) addNewRow = true;
           else idx = i;
         }
       })
@@ -284,11 +279,11 @@ export const eavSlice = createSlice({
       if (addNewRow) {
         state.values.push(action.payload);
       } else if (idx > -1) {
-        state.values[idx].valueStr = action.payload.valueStr;
-        state.values[idx].valueInt = action.payload.valueInt;
-        state.values[idx].valueFloat = action.payload.valueFloat;
-        state.values[idx].valueTime = action.payload.valueTime;
-        state.values[idx].valueBool = action.payload.valueBool;
+        state.values[idx].value_str = action.payload.value_str;
+        state.values[idx].value_int = action.payload.value_int;
+        state.values[idx].value_float = action.payload.value_float;
+        state.values[idx].value_time = action.payload.value_time;
+        state.values[idx].value_bool = action.payload.value_bool;
       }
     }).addCase(updateValue.rejected, (state) => {
       state.loading = false;
