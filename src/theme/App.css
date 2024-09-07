@@ -1,0 +1,286 @@
+/* ---- DEFAULT COMPONENTS ---- */
+:root {
+  /* CSS variables */
+  --default-bg-color: #242424;
+  --default-text-color: rgba(255, 255, 255, 0.87);
+
+  /* Global style */
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  box-sizing: border-box;
+
+  color-scheme: light dark;
+  color: var(--default-text-color);
+  background-color: var(--default-bg-color);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+h1, h2, h3, h4, h5, h6, p, a {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+input, textarea, select {
+  border: none;
+  min-height: 2em;
+  padding: 0.5em;
+  margin: 0.5em;
+  border-radius: 0.5em;
+  width: calc(100% - 2em);
+}
+
+input[type="checkbox"] {
+  width: 1.5em;
+}
+
+select {
+  padding: 0.8em 0.2em;
+  width: calc(100% - 1em);
+}
+
+/* ---- GENERAL USE CLASSES ---- */
+.container-center {
+  width: fit-content;
+  margin: auto;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  position: relative;
+  width: 100%;
+  max-width: inherit;
+  flex-grow: 1;
+  flex-wrap: wrap;
+  grid-template-columns: 1fr 2fr;
+}
+.grid > * {
+  position: relative;
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+/* ---- NAV BAR CSS ---- */
+nav {
+  display: flex;
+  padding: 1em;
+  margin-bottom: 0.5em;
+  background-color: rgb(127, 89, 165);
+}
+
+nav > * {
+  flex-grow: 1;
+}
+
+nav > .left {
+  text-align: left;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+nav > .right {
+  text-align: right;
+}
+nav > .right > * {
+  margin: auto 0.8em;
+}
+
+nav a {
+  color: white;
+  text-decoration: underline;
+}
+nav a:hover {
+  color: #ccf;
+}
+
+/* ---- EAV TABLE ---- */
+.eav-table {
+  position: relative;
+  min-width: 100px;
+  width: 80vw;
+  max-width: 1200px;
+  background-color: #444;
+  padding: 0.5em;
+  border-radius: 0.5em;
+}
+
+.eav-table .loading-overlay {
+  position: absolute;
+  width: 100%;
+  top: 40%;
+}
+
+.loading-overlay .loader {
+  margin: auto;
+  background-color: #0000001f;
+  padding: 2em 0;
+  width: 150px;
+  border-radius: 2em;
+}
+
+.eav-table .tab-container {
+  display: flex;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.eav-table .tab {
+  margin: 0 0.2em;
+  padding: 0.2em 1em;
+  background-color: #378;
+  border-top-left-radius: 0.5em;
+  border-top-right-radius: 0.5em;
+}
+
+.eav-table .tab:hover {
+  cursor: pointer;
+  background-color: #367;
+}
+
+.eav-table .tab.selected {
+  background-color: #357;
+}
+
+.eav-table .entry-container {
+  margin: 0 0.2em;
+  max-height: calc(100vh - 130px);
+  background-color: #357;
+  padding: 0.25em 0;
+  overflow: auto;
+}
+
+.eav-table .eav-entry {
+  border: 1px solid white;
+  margin: 0.5em;
+  padding: 0.5em;
+  border-radius: 0.5em;
+}
+
+.eav-entry button {
+  padding: 0 1.5em;
+}
+
+.eav-entry .header {
+  text-align: left;
+  display: flex;
+}
+
+.eav-entry .label {
+  flex-grow: 1;
+  padding: 0.2em;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.eav-entry .value-container {
+  margin-top: 0.5em;
+  border-top: 1px solid #afafaf66;
+}
+
+.eav-table .btn-ctn {
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.eav-table .btn-ctn button {
+  margin-right: 0.5em;
+  padding: 0.5em 1em;
+}
+
+.value-display-container {
+  cursor: pointer;
+  padding: 0.2em 0.5em;
+}
+
+.value-display-container:hover {
+  background-color: #6692c4;
+}
+
+.value-field-container {
+  display: flex;
+}
+
+.value-field-container input {
+  padding: 0.2em 0.5em;
+  margin: 0;
+  max-width: 30em;
+}
+
+/* ---- EAV FORM ---- */
+.modal-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0.5em;
+  background-color: #0000003f;
+}
+
+.modal-container .modal-form {
+  margin: auto;
+  margin-top: 5em;
+  width: fit-content;
+  border: 1px solid white;
+  border-radius: 0.5em;
+  background-color: #357;
+  padding: 1em;
+}
+
+.modal-form h3 {
+  margin-bottom: 1em;
+}
+
+.modal-form label {
+  display: block;
+  text-align: left;
+  padding: 0 0.6em;
+}
+
+.modal-form .err-msg {
+  color: #ff2600;
+  margin-top: 0.5em;
+}
