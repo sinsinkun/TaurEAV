@@ -177,6 +177,10 @@ export const eavSlice = createSlice({
       if (active) state.activeEnType = active;
     },
     setActiveEntity: (state, action) => {
+      if (action.payload === 0) {
+        state.activeEntity = null;
+        return;
+      }
       const [active] = state.entities.filter(x => x.id === action.payload);
       if (active) state.activeEntity = active;
     }
@@ -309,7 +313,6 @@ export const eavSlice = createSlice({
       state.loading = true;
     }).addCase(deleteEntity.fulfilled, (state, action) => {
       state.loading = false;
-      if (state.activeEntity?.id === action.payload) state.activeEntity = null;
       let idx = -1;
       state.entities.forEach((e, i) => {
         if (e.id === action.payload) idx = i;
@@ -317,7 +320,7 @@ export const eavSlice = createSlice({
       if (idx > -1) state.entities.splice(idx, 1);
     }).addCase(deleteEntity.rejected, (state) => {
       state.loading = false;
-    })
+    });
   }
 });
 

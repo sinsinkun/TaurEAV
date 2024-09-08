@@ -10,13 +10,21 @@ const EntityContainer = () => {
   const activeEntity = useSelector((state) => state.eav.activeEntity);
 
   function fetchData(id) {
-    dispatch(setActiveEntity(id));
-    dispatch(fetchValues(id));
+    if (activeEntity?.id === id) {
+      dispatch(setActiveEntity(0));
+    } else {
+      dispatch(setActiveEntity(id));
+      dispatch(fetchValues(id));
+    }
   }
 
   function confirmDeleteEntity(id) {
-    dispatch(openForm("delEntity"));
-    dispatch(setFormInput({ id: id }));
+    if (activeEntity?.id === id) {
+      dispatch(setActiveEntity(0));
+    } else {
+      dispatch(openForm("delEntity"));
+      dispatch(setFormInput({ id: id }));
+    }
   }
 
   function displayNoEntry() {
@@ -47,7 +55,7 @@ const EntityContainer = () => {
             <div className="header">
               <div className="label">{e.entity}</div>
               <button onClick={() => fetchData(e.id)}>
-                Fetch data
+                Details
               </button>
               <button onClick={() => confirmDeleteEntity(e.id)} className="square">
                 X
