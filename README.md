@@ -9,4 +9,5 @@ UI is cleaned up to more closely resemble native apps
 # Installation
 - `npm i`
 - `npm run tauri build`
-- **IMPORTANT**: Add .env file to same folder as .exe with `DATABASE_URL=mysql://{{url}}`
+- Optional: Add .env file to same folder as .exe with `DATABASE_URL={{mysql_url}}`
+  - Will use MySQL default if not provided
