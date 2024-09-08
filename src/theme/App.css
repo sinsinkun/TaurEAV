@@ -58,6 +58,12 @@ button:hover {
   border-color: #646cff;
 }
 
+button.square {
+  padding: 0 0.6em !important;
+  aspect-ratio: 1.5;
+  margin: 0 5px;
+}
+
 input, textarea, select {
   border: none;
   min-height: 2em;

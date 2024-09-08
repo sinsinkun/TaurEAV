@@ -116,6 +116,42 @@ async fn update_value(state: State<'_, TState>, input: EavValue) -> Result<EavVa
     }
 }
 
+#[tauri::command]
+async fn delete_entity(state: State<'_, TState>, id: u32) -> Result<String, String> {
+    let dbi = state.db.lock().await;
+    match dbi.delete_entity(id).await {
+        Ok(v) => Ok(v),
+        Err(e) => {
+            println!("Failed to delete entity: {:?}", e);
+            Err(e.to_string())
+        }
+    }
+}
+
+#[tauri::command]
+async fn delete_attr(state: State<'_, TState>, id: u32) -> Result<String, String> {
+    let dbi = state.db.lock().await;
+    match dbi.delete_attr(id).await {
+        Ok(v) => Ok(v),
+        Err(e) => {
+            println!("Failed to delete attr: {:?}", e);
+            Err(e.to_string())
+        }
+    }
+}
+
+#[tauri::command]
+async fn delete_value(state: State<'_, TState>, id: u32) -> Result<String, String> {
+    let dbi = state.db.lock().await;
+    match dbi.delete_value(id).await {
+        Ok(v) => Ok(v),
+        Err(e) => {
+            println!("Failed to delete value: {:?}", e);
+            Err(e.to_string())
+        }
+    }
+}
+
 fn main() {
     // launch SQL server
     Command::new("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqld.exe")
@@ -126,6 +162,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             connect, fetch_entity_types, fetch_entities, fetch_values,
             create_entity, create_attr, create_value, update_value,
+            delete_entity, delete_attr, delete_value,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -97,12 +97,16 @@ impl DBInterface {
 	}
 
 	pub async fn delete_entity_type(&self, id: u32) -> Result<String, sqlx::Error> {
-		// delete values for entities of entity type
+		let pool = self.get_pool()?;
+		// fetch entities for entity type
+		let entities: Vec<EavEntity> = self.fetch_entities(id).await?;
+		// delete entities + values of entity type
+		for e in entities { self.delete_entity(e.id).await?; }
 		// delete attributes for entity type
-		// delete entities for entity type
+		sqlx::query("DELETE FROM eav_attrs where entity_type_id = ?")
+			.bind(id.to_string()).execute(pool).await?;
 		// delete entity type
-		todo!();
-		Ok("OK".to_string())
+		Ok("OK".to_owned())
 	}
 
 	// -- ENTITIES --
@@ -128,7 +132,7 @@ impl DBInterface {
 		let pool = self.get_pool()?;
 		let debug = sqlx::query("CALL create_eav_entity(?, ?)").bind(entity_type).bind(entity).execute(pool).await?;
 		// note: execute is not waiting for transaction to finish before returning
-		async_std::task::sleep(Duration::from_millis(100)).await;
+		async_std::task::sleep(Duration::from_millis(10)).await;
 		let id = self.get_last_id().await?;
 		println!("create_entity: {:?} -> {}", debug, id);
 		let res = self.fetch_entity_by_id(id).await?;
@@ -136,10 +140,15 @@ impl DBInterface {
 	}
 
 	pub async fn delete_entity(&self, id: u32) -> Result<String, sqlx::Error> {
+		let pool = self.get_pool()?;
 		// delete values for entity
+		let debug1 = sqlx::query("DELETE FROM eav_values where entity_id = ?")
+			.bind(id.to_string()).execute(pool).await?;
 		// delete entity
-		todo!();
-		Ok("OK".to_string())
+		let debug2 = sqlx::query("DELETE FROM eav_entities where id = ?")
+			.bind(id.to_string()).execute(pool).await?;
+		println!("delete_entity(value): {:?}, delete_entity(entity): {:?}", debug1, debug2);
+		Ok("OK".to_owned())
 	}
 
 	// -- ATTRIBUTES --
@@ -160,7 +169,7 @@ impl DBInterface {
 			.bind(attr_name).bind(attr_type).bind(entity_type_id).bind(allow_multiple)
 			.execute(pool).await?;
 		// note: execute is not waiting for transaction to finish before returning
-		async_std::task::sleep(Duration::from_millis(100)).await;
+		async_std::task::sleep(Duration::from_millis(10)).await;
 		let id = self.get_last_id().await?;
 		println!("create_attr: {:?} -> {}", debug, id);
 		let res = self.fetch_attr_by_id(id).await?;
@@ -168,10 +177,15 @@ impl DBInterface {
 	}
 
 	pub async fn delete_attr(&self, id: u32) -> Result<String, sqlx::Error> {
+		let pool = self.get_pool()?;
 		// delete values for attr
+		let debug1 = sqlx::query("DELETE FROM eav_values where attr_id = ?")
+			.bind(id.to_string()).execute(pool).await?;
 		// delete attr
-		todo!();
-		Ok("OK".to_string())
+		let debug2 = sqlx::query("DELETE FROM eav_attrs where id = ?")
+			.bind(id.to_string()).execute(pool).await?;
+		println!("delete_attr(value): {:?}, delete_attr(attr): {:?}", debug1, debug2);
+		Ok("OK".to_owned())
 	}
 
 	// -- VALUES --
@@ -191,7 +205,7 @@ impl DBInterface {
 			.bind(input.value_float).bind(input.value_time).bind(input.value_bool)
 			.execute(pool).await?;
 		// note: execute is not waiting for transaction to finish before returning
-		async_std::task::sleep(Duration::from_millis(100)).await;
+		async_std::task::sleep(Duration::from_millis(10)).await;
 		let id = self.get_last_id().await?;
 		println!("create_value: {:?} -> {}", debug, id);
 		let res = self.fetch_value_by_id(id).await?;
@@ -207,11 +221,19 @@ impl DBInterface {
 			.bind(input.value_time).bind(input.value_bool).bind(input.id)
 			.execute(pool).await?;
 		// note: execute is not waiting for transaction to finish before returning
-		async_std::task::sleep(Duration::from_millis(100)).await;
+		async_std::task::sleep(Duration::from_millis(10)).await;
 		let id = self.get_last_id().await?;
 		println!("update_value: {:?} -> {}", debug, id);
 		let res = self.fetch_value_by_id(id).await?;
 		Ok(res)
+	}
+
+	pub async fn delete_value(&self, id: u32) -> Result<String, sqlx::Error> {
+		let pool = self.get_pool()?;
+		let debug = sqlx::query("DELETE FROM eav_values where id = ?")
+			.bind(id.to_string()).execute(pool).await?;
+		println!("delete_value: {:?}", debug);
+		Ok("OK".to_owned())
 	}
 
 	// -- VIEWS --

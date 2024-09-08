@@ -127,6 +127,19 @@ export const updateValue = createAsyncThunk(
   }
 )
 
+export const deleteEntity = createAsyncThunk(
+  'eav/deleteEntity',
+  async (id, { rejectWithValue }) => {
+    try {
+      await invoke("delete_entity", { id });
+      return id;
+    } catch (e) {
+      console.error("API failed -", e);
+      return rejectWithValue(null);
+    }
+  }
+)
+
 export const eavSlice = createSlice({
   name: 'eav',
   initialState: {
@@ -288,6 +301,19 @@ export const eavSlice = createSlice({
     }).addCase(updateValue.rejected, (state) => {
       state.loading = false;
     });
+    builder.addCase(deleteEntity.pending, (state) => {
+      state.loading = true;
+    }).addCase(deleteEntity.fulfilled, (state, action) => {
+      state.loading = false;
+      if (state.activeEntity?.id === action.payload) state.activeEntity = null;
+      let idx = -1;
+      state.entities.forEach((e, i) => {
+        if (e.id === action.payload) idx = i;
+      })
+      if (idx > -1) state.entities.splice(idx, 1);
+    }).addCase(deleteEntity.rejected, (state) => {
+      state.loading = false;
+    })
   }
 });
 

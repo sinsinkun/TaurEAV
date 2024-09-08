@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 
 import EntityData from "./entityData";
-import { fetchValues, openForm, setActiveEntity } from "../store/eav";
+import { fetchValues, openForm, setActiveEntity, deleteEntity } from "../store/eav";
 
 const EntityContainer = () => {
   const dispatch = useDispatch();
@@ -43,6 +43,9 @@ const EntityContainer = () => {
               <div className="label">{e.entity}</div>
               <button onClick={() => fetchData(e.id)}>
                 Fetch data
+              </button>
+              <button onClick={() => dispatch(deleteEntity(e.id))} className="square">
+                X
               </button>
             </div>
             {activeEntity?.id === e.id ? <EntityData /> : null}
