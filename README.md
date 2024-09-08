@@ -2,6 +2,10 @@
 
 Desktop web app duplicate of [EAV-table-app](https://github.com/sinsinkun/EAV-table-app)
 
+<img src="./screenshot.png" width="600px" />
+
+UI is cleaned up to more closely resemble native apps
+
 # Installation
 - `npm i`
 - `npm run tauri build`
