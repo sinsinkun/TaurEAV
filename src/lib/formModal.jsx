@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 
-import { addAttribute, addEntity, closeForm } from "../store/eav";
+import { addAttribute, addEntity, closeForm, deleteEntity, setFormInput } from "../store/eav";
 
 const FormModal = () => {
   const dispatch = useDispatch();
   const formType = useSelector((state) => state.eav.formType);
+  const formInput = useSelector((state) => state.eav.formInput);
   const activeEnType = useSelector((state) => state.eav.activeEnType);
   const [fields, setFields] = useState({});
   const [title, setTitle] = useState("");
@@ -20,6 +21,11 @@ const FormModal = () => {
 
   function handleSubmit(e) {
     e.preventDefault();
+    if (formType === "delEntity") {
+      dispatch(deleteEntity(formInput.id));
+      dispatch(setFormInput({}));
+      return;
+    }
     if (!activeEnType) return setErr("No active tab");
     const form = { ...fields };
     form.entity_type = activeEnType.entity_type;
@@ -58,6 +64,9 @@ const FormModal = () => {
       case "attr":
         setTitle("New Attribute");
         setFields({ attr: "", value_type: "", allow_multiple: false });
+        break;
+      case "delEntity":
+        setTitle("Delete Entity?");
         break;
       default:
         setTitle("Unknown");
@@ -104,8 +113,8 @@ const FormModal = () => {
         {formType === "entity" && renderEntityFields()}
         {formType === "attr" && renderAttrFields()}
         <div className="btn-ctn">
-          <button type="submit">Add</button>
           <button onClick={close}>Close</button>
+          <button type="submit">{formType === "delEntity" ? "Confirm" : "Add"}</button>
         </div>
         {!!err && (
           <div className="err-msg">ERR: {err}</div>

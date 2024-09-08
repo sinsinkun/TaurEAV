@@ -4,7 +4,7 @@
 use async_std::sync::Mutex;
 use eav_structs::{EavAttribute, EavEntity, EavEntityType, EavValue, EavView};
 use std::process::Command;
-use tauri::State;
+use tauri::{RunEvent, State};
 
 mod db_interface;
 mod eav_structs;
@@ -154,7 +154,7 @@ async fn delete_value(state: State<'_, TState>, id: u32) -> Result<String, Strin
 
 fn main() {
     // launch SQL server
-    Command::new("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqld.exe")
+    let mut cmd = Command::new("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqld.exe")
         .arg("--console").spawn().expect("Command Err");
     // configure tauri
     tauri::Builder::default()
@@ -164,6 +164,13 @@ fn main() {
             create_entity, create_attr, create_value, update_value,
             delete_entity, delete_attr, delete_value,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("Error building app")
+        .run(move |_app_handle, event| match event {
+            RunEvent::ExitRequested { .. } => {
+                cmd.kill().expect("Failed to close SQL");
+                println!("Successfully closed SQL server");
+            }
+            _ => ()
+        });
 }

@@ -149,6 +149,7 @@ export const eavSlice = createSlice({
     entities: [],
     values: [],
     formType: null,
+    formInput: {},
     activeEnType: null,
     activeEntity: null,
   },
@@ -167,6 +168,9 @@ export const eavSlice = createSlice({
     },
     closeForm: (state) => {
       state.formType = null
+    },
+    setFormInput: (state, action) => {
+      state.formInput = action.payload;
     },
     setActiveEnType: (state, action) => {
       const [active] = state.entityTypes.filter(x => x.id === action.payload);
@@ -323,6 +327,7 @@ export const {
   clearValues,
   openForm,
   closeForm,
+  setFormInput,
   setActiveEnType,
   setActiveEntity,
 } = eavSlice.actions;

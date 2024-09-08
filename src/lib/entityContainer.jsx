@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 
 import EntityData from "./entityData";
-import { fetchValues, openForm, setActiveEntity, deleteEntity } from "../store/eav";
+import { fetchValues, openForm, setActiveEntity, setFormInput } from "../store/eav";
 
 const EntityContainer = () => {
   const dispatch = useDispatch();
@@ -12,6 +12,11 @@ const EntityContainer = () => {
   function fetchData(id) {
     dispatch(setActiveEntity(id));
     dispatch(fetchValues(id));
+  }
+
+  function confirmDeleteEntity(id) {
+    dispatch(openForm("delEntity"));
+    dispatch(setFormInput({ id: id }));
   }
 
   function displayNoEntry() {
@@ -44,7 +49,7 @@ const EntityContainer = () => {
               <button onClick={() => fetchData(e.id)}>
                 Fetch data
               </button>
-              <button onClick={() => dispatch(deleteEntity(e.id))} className="square">
+              <button onClick={() => confirmDeleteEntity(e.id)} className="square">
                 X
               </button>
             </div>
