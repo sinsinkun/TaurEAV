@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 
-import { searchEntity } from "../store/eav";
+import { searchAttrValue, searchEntity } from "../store/eav";
 
 function SearchBar() {
   const dispatch = useDispatch();
@@ -14,11 +14,17 @@ function SearchBar() {
 
   function handleKey(e) {
     if (e.code === "Enter") {
-      dispatch(searchEntity(v));
+      handleSubmit();
     }
   }
 
   function handleSubmit() {
+    const attrRegex = /^[a-z0-9_]+?:/i;
+    if (attrRegex.test(v)) {
+      const [attr, val] = v.split(": ");
+      dispatch(searchAttrValue({ attr, val }));
+      return;
+    }
     dispatch(searchEntity(v));
   }
 

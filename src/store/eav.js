@@ -142,9 +142,24 @@ export const deleteEntity = createAsyncThunk(
 
 export const searchEntity = createAsyncThunk(
   'eav/searchEntity',
-  async (str, { rejectWithValue }) => {
+  async ({ regex, extended }, { rejectWithValue }) => {
     try {
-      const res = await invoke("search_entity", { regex: str, extended: true });
+      if (!regex) return [];
+      const res = await invoke("search_entity", { regex, extended });
+      return res;
+    } catch (e) {
+      console.error("API failed -", e);
+      return rejectWithValue(null);
+    }
+  }
+)
+
+export const searchAttrValue = createAsyncThunk(
+  'eav/searchAttrValue',
+  async ({ attr, val }, { rejectWithValue }) => {
+    try {
+      if (!attr || !val) return [];
+      const res = await invoke("search_entity_with_attr_value", { attr, val });
       return res;
     } catch (e) {
       console.error("API failed -", e);
@@ -342,6 +357,17 @@ export const eavSlice = createSlice({
       state.entities = action.payload;
       state.activeEntity = null;
     }).addCase(searchEntity.rejected, (state) => {
+      state.loading = false;
+      state.entities = [];
+    });
+    builder.addCase(searchAttrValue.pending, (state) => {
+      state.loading = true;
+      state.activeEnType = null;
+    }).addCase(searchAttrValue.fulfilled, (state, action) => {
+      state.loading = false;
+      state.entities = action.payload;
+      state.activeEntity = null;
+    }).addCase(searchAttrValue.rejected, (state) => {
       state.loading = false;
       state.entities = [];
     });
