@@ -8,10 +8,9 @@ const EntityTypeTabs = () => {
   const connected = useSelector((state) => state.eav.connected);
   const loading = useSelector((state) => state.eav.loading);
   const tabs = useSelector((state) => state.eav.entityTypes);
-  const [activeTab, setActiveTab] = useState(0);
+  const activeTab = useSelector((state) => state.eav.activeEnType);
 
   function loadEntities(id) {
-    setActiveTab(id);
     dispatch(clearValues());
     dispatch(fetchEntities(id));
     dispatch(setActiveEnType(id));
@@ -28,7 +27,7 @@ const EntityTypeTabs = () => {
     <div className="tab-container">
       {tabs.map(et => {
         let className = "tab";
-        if (activeTab == et.id) className += " selected";
+        if (activeTab?.id == et.id) className += " selected";
         return (
           <div className={className} key={et.id} onClick={() => loadEntities(et.id)}>
             {et.entity_type}
