@@ -250,14 +250,10 @@ impl DBInterface {
 		let query = "UPDATE eav_values SET ".to_owned() +
 			"value_str = ?, value_int = ?, value_float = ?, value_time = ?, value_bool = ? " +
 			"WHERE id = ?";
-		let debug = sqlx::query(&query).bind(input.value_str).bind(input.value_int).bind(input.value_float)
+		sqlx::query(&query).bind(input.value_str).bind(input.value_int).bind(input.value_float)
 			.bind(input.value_time).bind(input.value_bool).bind(input.id)
 			.execute(pool).await?;
-		// note: execute is not waiting for transaction to finish before returning
-		async_std::task::sleep(Duration::from_millis(10)).await;
-		let id = self.get_last_id().await?;
-		println!("update_value: {:?} -> {}", debug, id);
-		let res = self.fetch_value_by_id(id).await?;
+		let res = self.fetch_value_by_id(input.id).await?;
 		Ok(res)
 	}
 
