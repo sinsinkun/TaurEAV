@@ -1,5 +1,5 @@
 [package]
-name = "eav-tauri"
+name = "taureav"
 version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]

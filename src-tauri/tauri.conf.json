@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "eav-tauri",
+    "productName": "taureav",
     "version": "0.1.0"
   },
   "tauri": {
@@ -19,9 +19,11 @@
     },
     "windows": [
       {
-        "title": "eav-tauri",
-        "width": 800,
-        "height": 600
+        "title": "TaurEAV",
+        "width": 900,
+        "height": 700,
+        "minWidth": 400,
+        "minHeight": 400
       }
     ],
     "security": {
@@ -30,7 +32,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.eav-tauri.app",
+      "identifier": "com.taureav.app",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",

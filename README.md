@@ -4,7 +4,8 @@ Desktop web app duplicate of [EAV-table-app](https://github.com/sinsinkun/EAV-ta
 
 <img src="./screenshot.png" width="600px" />
 
-UI is cleaned up to more closely resemble native apps
+- UI is cleaned up to more closely resemble native apps
+- Added searchbar (regex enabled, case insensitive)
 
 Note: the console keeps the MySQL service running, do not close it
 
