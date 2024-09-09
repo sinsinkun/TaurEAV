@@ -168,13 +168,18 @@ impl DBInterface {
 			"SELECT id FROM eav_attrs WHERE attr = ?" +
 			") AND value_str REGEXP ?";
 		let vals = sqlx::query_as::<_, EavValue>(&query1).bind("alt_title").bind(&regex).fetch_all(pool).await?;
-		let mut ent_ids = String::new();
-		for v in vals {
-			ent_ids = ent_ids + &v.entity_id.to_string() + ",";
+		let mut query2 = String::new();
+		if vals.len() > 0 {
+			let mut ent_ids = String::new();
+			for v in vals {
+				ent_ids = ent_ids + &v.entity_id.to_string() + ",";
+			}
+			ent_ids.pop();
+			query2 = "SELECT * FROM eav_entities WHERE id IN (".to_owned() + 
+				&ent_ids + ") OR entity REGEXP ?";
+		} else {
+			query2 = "SELECT * FROM eav_entities WHERE entity REGEXP ?".to_owned();
 		}
-		ent_ids.pop();
-		let query2 = "SELECT * FROM eav_entities WHERE id IN (".to_owned() + 
-			&ent_ids + ") OR entity REGEXP ?";
 		let rows = sqlx::query_as::<_, EavEntity>(&query2).bind(&regex).fetch_all(pool).await?;
 		Ok(rows)
 	}
