@@ -42,10 +42,10 @@ impl DBInterface {
 		println!("Connecting to database...");
 		// connect to db
 		let pool = MySqlPoolOptions::new()
-		.max_connections(1)
-		.acquire_timeout(Duration::from_secs(2))
-		.connect(&database_url)
-		.await?;
+			.max_connections(1)
+			.acquire_timeout(Duration::from_secs(2))
+			.connect(&database_url)
+			.await?;
 		self.db = Some(pool);
 		Ok("OK".to_owned())
 	}
@@ -149,6 +149,34 @@ impl DBInterface {
 			.bind(id.to_string()).execute(pool).await?;
 		println!("delete_entity(value): {:?}, delete_entity(entity): {:?}", debug1, debug2);
 		Ok("OK".to_owned())
+	}
+
+	pub async fn search_entity(&self, regex: String) -> Result<Vec<EavEntity>, sqlx::Error> {
+		let pool = self.get_pool()?;
+		let rows = sqlx::query_as::<_, EavEntity>("SELECT * FROM eav_entities WHERE entity REGEXP ?")
+			.bind(&regex)
+			.fetch_all(pool)
+			.await?;
+		Ok(rows)
+	}
+
+	pub async fn search_entity_with_alt_title(&self, regex: String) -> Result<Vec<EavEntity>, sqlx::Error> {
+		let pool = self.get_pool()?;
+		// get alt_title attr ids
+		let query1 = 
+			"SELECT * FROM eav_values WHERE attr_id IN (".to_owned() +
+			"SELECT id FROM eav_attrs WHERE attr = ?" +
+			") AND value_str REGEXP ?";
+		let vals = sqlx::query_as::<_, EavValue>(&query1).bind("alt_title").bind(&regex).fetch_all(pool).await?;
+		let mut ent_ids = String::new();
+		for v in vals {
+			ent_ids = ent_ids + &v.entity_id.to_string() + ",";
+		}
+		ent_ids.pop();
+		let query2 = "SELECT * FROM eav_entities WHERE id IN (".to_owned() + 
+			&ent_ids + ") OR entity REGEXP ?";
+		let rows = sqlx::query_as::<_, EavEntity>(&query2).bind(&regex).fetch_all(pool).await?;
+		Ok(rows)
 	}
 
 	// -- ATTRIBUTES --

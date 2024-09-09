@@ -73,6 +73,10 @@ input, textarea, select {
   width: calc(100% - 2em);
 }
 
+input:focus-visible {
+  outline: 1px solid #646cff;
+}
+
 input[type="checkbox"] {
   width: 1.5em;
 }
@@ -84,7 +88,7 @@ select {
 
 /* ---- GENERAL USE CLASSES ---- */
 .container-center {
-  width: fit-content;
+  width: 100%;
   margin: auto;
   text-align: center;
 }
@@ -109,7 +113,6 @@ nav {
   display: flex;
   position: relative;
   width: 100vw;
-  padding: 0 0.5em;
   background-color: #2b2d38;
   box-shadow: 0 0 4px black;
   user-select: none;
@@ -138,6 +141,22 @@ nav .submenu {
   box-shadow: 0 0 4px #1b1c1f;
 }
 
+/* ---- SEARCH BAR ---- */
+.searchbar {
+  display: grid;
+  width: calc(100% - 8px);
+  grid-template-columns: 4fr 1fr;
+}
+
+.searchbar input {
+  padding: 0.2em 0.5em;
+}
+
+.searchbar button {
+  margin: auto 0;
+  background-color: #425361;
+}
+
 /* ---- EAV TABLE ---- */
 .eav-table {
   position: relative;
@@ -146,6 +165,8 @@ nav .submenu {
   max-width: 1200px;
   padding: 0 3px;
   margin-top: 5px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .eav-table .loading-overlay {
@@ -186,7 +207,7 @@ nav .submenu {
 }
 
 .eav-table .entry-container {
-  height: calc(100vh - 70px);
+  height: calc(100vh - 115px);
   background-color: #357;
   padding: 0.25em 0;
   overflow-y: scroll;

@@ -152,6 +152,27 @@ async fn delete_value(state: State<'_, TState>, id: u32) -> Result<String, Strin
     }
 }
 
+#[tauri::command]
+async fn search_entity(state: State<'_, TState>, regex: String, extended: bool) -> Result<Vec<EavEntity>, String> {
+    let dbi = state.db.lock().await;
+    if extended {
+        return match dbi.search_entity_with_alt_title(regex).await {
+            Ok(v) => Ok(v),
+            Err(e) => {
+                println!("Failed to fetch entities: {:?}", e);
+                Err(e.to_string())
+            }
+        }
+    }
+    match dbi.search_entity(regex).await {
+        Ok(v) => Ok(v),
+        Err(e) => {
+            println!("Failed to fetch entities: {:?}", e);
+            Err(e.to_string())
+        }
+    }
+}
+
 fn main() {
     // launch SQL server
     let mut cmd = Command::new("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqld.exe")
@@ -162,7 +183,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             connect, fetch_entity_types, fetch_entities, fetch_values,
             create_entity, create_attr, create_value, update_value,
-            delete_entity, delete_attr, delete_value,
+            delete_entity, delete_attr, delete_value, search_entity,
         ])
         .build(tauri::generate_context!())
         .expect("Error building app")
