@@ -6,6 +6,7 @@ import { fetchValues, openForm, setActiveEntity, setFormInput } from "../store/e
 const EntityContainer = () => {
   const dispatch = useDispatch();
   const entities = useSelector((state) => state.eav.entities);
+  const entityTypes = useSelector((state) => state.eav.entityTypes);
   const activeTab = useSelector((state) => state.eav.activeEnType);
   const activeEntity = useSelector((state) => state.eav.activeEntity);
 
@@ -36,6 +37,13 @@ const EntityContainer = () => {
     return false;
   }
 
+  function renderType(entity) {
+    if (activeTab) return null;
+    const [type] = entityTypes.filter(et => et.id === entity.entity_type_id);
+    if (!type) return "(?)";
+    return "(" + type.entity_type + ")";
+  }
+
   return (
     <div className="entry-container">
       <div className="btn-ctn">
@@ -53,7 +61,7 @@ const EntityContainer = () => {
         return (
           <div className="eav-entry" key={"entity-" + e.id}>
             <div className="header">
-              <div className="label">{e.entity}</div>
+              <div className="label">{e.entity} {renderType(e)}</div>
               <button onClick={() => fetchData(e.id)}>
                 Details
               </button>
