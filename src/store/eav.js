@@ -89,6 +89,21 @@ export const addEntity = createAsyncThunk(
   }
 )
 
+export const addEntityType = createAsyncThunk(
+  'eav/addEntityType',
+  async (input, { rejectWithValue }) => {
+    try {
+      const { entity_type } = input;
+      if (!entity_type) throw new Error("Missing required inputs");
+      const res = await invoke("create_entity_type", { entity_type });
+      return res;
+    } catch (e) {
+      console.error("API failed -", e);
+      return rejectWithValue(null);
+    }
+  }
+)
+
 export const addValue = createAsyncThunk(
   'eav/addValue',
   async (input, { rejectWithValue }) => {
@@ -286,6 +301,14 @@ export const eavSlice = createSlice({
       state.loading = false;
       state.entities.push(action.payload);
     }).addCase(addEntity.rejected, (state) => {
+      state.loading = false;
+    });
+    builder.addCase(addEntityType.pending, (state) => {
+      state.loading = true;
+    }).addCase(addEntityType.fulfilled, (state, action) => {
+      state.loading = false;
+      state.entityTypes.push(action.payload);
+    }).addCase(addEntityType.rejected, (state) => {
       state.loading = false;
     });
     builder.addCase(addValue.pending, (state) => {

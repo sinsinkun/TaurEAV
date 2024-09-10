@@ -139,6 +139,11 @@ nav .submenu {
   top: 24px;
   padding: 4px 0;
   box-shadow: 0 0 4px #1b1c1f;
+  text-align: left;
+}
+
+.submenu > * {
+  margin-bottom: 4px;
 }
 
 /* ---- SEARCH BAR ---- */

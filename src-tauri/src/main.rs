@@ -67,6 +67,18 @@ async fn fetch_values(state: State<'_, TState>, entity_id: u32) -> Result<Vec<Ea
 }
 
 #[tauri::command(rename_all = "snake_case")]
+async fn create_entity_type(state: State<'_, TState>, entity_type: String) -> Result<EavEntityType, String> {
+    let dbi = state.db.lock().await;
+    match dbi.create_entity_type(&entity_type).await {
+        Ok(v) => Ok(v),
+        Err(e) => {
+            println!("Failed to create entity type: {:?}", e);
+            Err(e.to_string())
+        }
+    }
+}
+
+#[tauri::command(rename_all = "snake_case")]
 async fn create_entity(state: State<'_, TState>, entity_type: String, entity: String) -> Result<EavEntity, String> {
     let dbi = state.db.lock().await;
     match dbi.create_entity(&entity_type, &entity).await {
@@ -208,9 +220,9 @@ fn main() {
         .manage(TState { db: Mutex::new(DBInterface::new()) })
         .invoke_handler(tauri::generate_handler![
             connect, fetch_entity_types, fetch_entities, fetch_values,
-            create_entity, create_attr, create_value, update_value,
-            delete_entity, delete_attr, delete_value, search_entity,
-            search_entity_with_attr_value, search_entity_without_attr,
+            create_entity_type, create_entity, create_attr, create_value, 
+            update_value, delete_entity, delete_attr, delete_value, 
+            search_entity, search_entity_with_attr_value, search_entity_without_attr,
         ])
         .build(tauri::generate_context!())
         .expect("Error building app")

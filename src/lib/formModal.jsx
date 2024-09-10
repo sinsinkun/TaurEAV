@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 
-import { addAttribute, addEntity, closeForm, deleteEntity, setFormInput } from "../store/eav";
+import { addAttribute, addEntity, addEntityType, closeForm, deleteEntity, setFormInput } from "../store/eav";
 
 const FormModal = () => {
   const dispatch = useDispatch();
@@ -26,8 +26,14 @@ const FormModal = () => {
       dispatch(setFormInput({}));
       return;
     }
-    if (!activeEnType) return setErr("No active tab");
     const form = { ...fields };
+    if (formType === "entityType") {
+      if (!form.entity_type) return setErr("No name specified");
+      dispatch(addEntityType(form));
+      close();
+      return;
+    }
+    if (!activeEnType) return setErr("No active tab");
     form.entity_type = activeEnType.entity_type;
     form.entity_type_id = activeEnType.id;
     if (formType === "entity") {
@@ -57,6 +63,10 @@ const FormModal = () => {
 
   useEffect(() => {
     switch (formType) {
+      case "entityType":
+        setTitle("New Category");
+        setFields({ entity_type: "" });
+        break;
       case "entity":
         setTitle("New Entity");
         setFields({ entity: "" });
@@ -73,6 +83,15 @@ const FormModal = () => {
         break;
     }
   }, [formType])
+
+  function renderEntityTypeFields() {
+    return (
+      <>
+        <label htmlFor="entity_type">Name</label>
+        <input type="text" name="entity_type" onChange={handleInput} />
+      </>
+    )
+  }
 
   function renderEntityFields() {
     return (
@@ -110,6 +129,7 @@ const FormModal = () => {
     <div className="modal-container">
       <form className="modal-form" onSubmit={handleSubmit}>
         <h3>{title}</h3>
+        {formType === "entityType" && renderEntityTypeFields()}
         {formType === "entity" && renderEntityFields()}
         {formType === "attr" && renderAttrFields()}
         <div className="btn-ctn">
