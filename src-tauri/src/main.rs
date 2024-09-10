@@ -217,7 +217,7 @@ fn main() {
         .run(move |_app_handle, event| match event {
             RunEvent::ExitRequested { .. } => {
                 cmd.kill().expect("Failed to close SQL");
-                println!("Successfully closed SQL server");
+                println!("Successfully closed SQL connection");
             }
             _ => ()
         });

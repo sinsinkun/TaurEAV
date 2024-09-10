@@ -68,28 +68,17 @@ impl DBInterface {
 		let rows = sqlx::query_as::<_, EavEntityType>("SELECT * FROM eav_entity_types")
 			.fetch_all(pool)
 			.await?;
-		Ok(rows)
-	}
-
-	pub async fn fetch_entity_type_by_ids(&self, ids: Vec<u32>) -> Result<Vec<EavEntityType>, sqlx::Error> {
-		let pool = self.get_pool()?;
-		let mut query: String = "SELECT * FROM eav_entity_types IN (".to_owned();
-		for id in ids {
-			query = query + &id.to_string() + ",";
-		}
-		query.pop();
-		query += ")";
-		let rows = sqlx::query_as::<_, EavEntityType>(&query)
-			.fetch_all(pool)
-			.await?;
+		println!("fetch_entity_types: {} results", rows.len());
 		Ok(rows)
 	}
 
 	pub async fn create_entity_type(&self, name: &str) -> Result<EavEntityType, sqlx::Error> {
 		let pool = self.get_pool()?;
-		sqlx::query("INSERT INTO eav_entity_types (entity_type) VALUES (?)").bind(name).execute(pool).await?;
+		let debug = sqlx::query("INSERT INTO eav_entity_types (entity_type) VALUES (?)")
+			.bind(name).execute(pool).await?;
 		let id = self.get_last_id().await?;
-		let res = sqlx::query_as::<_, EavEntityType>("SELECT * FROM eav_entity_types WHERE id = (?)")
+		println!("create_entity_type: {:?} -> {}", debug, id);
+		let res = sqlx::query_as::<_, EavEntityType>("SELECT * FROM eav_entity_types WHERE id = ?")
 			.bind(id.to_string())
 			.fetch_one(pool)
 			.await?;
@@ -103,8 +92,9 @@ impl DBInterface {
 		// delete entities + values of entity type
 		for e in entities { self.delete_entity(e.id).await?; }
 		// delete attributes for entity type
-		sqlx::query("DELETE FROM eav_attrs where entity_type_id = ?")
+		let debug = sqlx::query("DELETE FROM eav_attrs where entity_type_id = ?")
 			.bind(id.to_string()).execute(pool).await?;
+		println!("delete_entity_type: {:?}", debug);
 		// delete entity type
 		Ok("OK".to_owned())
 	}
@@ -116,6 +106,7 @@ impl DBInterface {
 			.bind(entity_type_id.to_string())
 			.fetch_all(pool)
 			.await?;
+		println!("fetch_entities: {} results", rows.len());
 		Ok(rows)
 	}
 
@@ -125,6 +116,7 @@ impl DBInterface {
 			.bind(id.to_string())
 			.fetch_one(pool)
 			.await?;
+		println!("fetch_entity_by_id: {}", row.id);
 		Ok(row)
 	}
 
@@ -157,6 +149,7 @@ impl DBInterface {
 			.bind(&regex)
 			.fetch_all(pool)
 			.await?;
+		println!("search_entity: {} results", rows.len());
 		Ok(rows)
 	}
 
@@ -181,6 +174,7 @@ impl DBInterface {
 			query2 = "SELECT * FROM eav_entities WHERE entity REGEXP ?".to_owned();
 		}
 		let rows = sqlx::query_as::<_, EavEntity>(&query2).bind(&regex).fetch_all(pool).await?;
+		println!("search_entity_with_alt_title: {} results", rows.len());
 		Ok(rows)
 	}
 
@@ -191,6 +185,7 @@ impl DBInterface {
 			"(SELECT id FROM eav_attrs WHERE attr = ?) " +
 			"WHERE v.attr_id IS NOT NULL";
 		let rows = sqlx::query_as::<_, EavEntity>(&query).bind(attr).fetch_all(pool).await?;
+		println!("search_entity_with_attr: {} results", rows.len());
 		Ok(rows)
 	}
 
@@ -201,6 +196,7 @@ impl DBInterface {
 			"(SELECT id FROM eav_attrs WHERE attr = ?) " +
 			"WHERE v.attr_id IS NULL";
 		let rows = sqlx::query_as::<_, EavEntity>(&query).bind(attr).fetch_all(pool).await?;
+		println!("search_entity_without_attr: {} results", rows.len());
 		Ok(rows)
 	}
 
@@ -216,17 +212,19 @@ impl DBInterface {
 		ent_ids.pop();
 		let query = "SELECT * FROM eav_entities WHERE id IN (".to_owned() + &ent_ids + ")";
 		let rows = sqlx::query_as::<_, EavEntity>(&query).fetch_all(pool).await?;
+		println!("search_entity_with_attr_value: {} results", rows.len());
 		Ok(rows)
 	}
 
 	// -- ATTRIBUTES --
 	pub async fn fetch_attr_by_id(&self, id: u32) -> Result<EavAttribute, sqlx::Error> {
 		let pool = self.get_pool()?;
-		let res = sqlx::query_as::<_, EavAttribute>("SELECT * FROM eav_attrs WHERE id = ?")
+		let row = sqlx::query_as::<_, EavAttribute>("SELECT * FROM eav_attrs WHERE id = ?")
 			.bind(id.to_string())
 			.fetch_one(pool)
 			.await?;
-		Ok(res)
+		println!("fetch_attr_by_id: {}", row.id);
+		Ok(row)
 	}
 
 	pub async fn create_attr(&self, 
@@ -259,11 +257,12 @@ impl DBInterface {
 	// -- VALUES --
 	pub async fn fetch_value_by_id(&self, id: u32) -> Result<EavValue, sqlx::Error> {
 		let pool = self.get_pool()?;
-		let res = sqlx::query_as::<_, EavValue>("SELECT * FROM eav_values WHERE id = ?")
+		let row = sqlx::query_as::<_, EavValue>("SELECT * FROM eav_values WHERE id = ?")
 			.bind(id.to_string())
 			.fetch_one(pool)
 			.await?;
-		Ok(res)
+		println!("fetch_value_by_id: {}", row.id);
+		Ok(row)
 	}
 
 	pub async fn create_value(&self, input: EavValue) -> Result<EavValue, sqlx::Error> {
@@ -321,10 +320,11 @@ impl DBInterface {
 		let query = "UPDATE eav_values SET ".to_owned() +
 			"value_str = ?, value_int = ?, value_float = ?, value_time = ?, value_bool = ? " +
 			"WHERE id = ?";
-		sqlx::query(&query).bind(input.value_str).bind(input.value_int).bind(input.value_float)
+		let debug = sqlx::query(&query).bind(input.value_str).bind(input.value_int).bind(input.value_float)
 			.bind(input.value_time).bind(input.value_bool).bind(input.id)
 			.execute(pool).await?;
 		let res = self.fetch_value_by_id(input.id).await?;
+		println!("update_value: {:?}", debug);
 		Ok(res)
 	}
 
@@ -343,6 +343,7 @@ impl DBInterface {
 			.bind(entity_id.to_string())
 			.fetch_all(pool)
 			.await?;
+		println!("fetch_views_by_entity_id: {} results", rows.len());
 		Ok(rows)
 	}
 
@@ -361,6 +362,7 @@ impl DBInterface {
 			.bind(&attr).bind(&val).bind(&val).bind(&float_val).bind(&bool_val)
 			.fetch_all(pool)
 			.await?;
+		println!("fetch_views_by_attr_value: {} results", rows.len());
 		Ok(rows)
 	}
 }
