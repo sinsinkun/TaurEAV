@@ -187,6 +187,18 @@ async fn search_entity_with_attr_value(
     }
 }
 
+#[tauri::command]
+async fn search_entity_without_attr(state: State<'_, TState>, attr: String) -> Result<Vec<EavEntity>, String> {
+    let dbi = state.db.lock().await;
+    match dbi.search_entity_without_attr(attr).await {
+        Ok(v) => Ok(v),
+        Err(e) => {
+            println!("Failed to fetch entities: {:?}", e);
+            Err(e.to_string())
+        }
+    }
+}
+
 fn main() {
     // launch SQL server
     let mut cmd = Command::new("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqld.exe")
@@ -198,7 +210,7 @@ fn main() {
             connect, fetch_entity_types, fetch_entities, fetch_values,
             create_entity, create_attr, create_value, update_value,
             delete_entity, delete_attr, delete_value, search_entity,
-            search_entity_with_attr_value,
+            search_entity_with_attr_value, search_entity_without_attr,
         ])
         .build(tauri::generate_context!())
         .expect("Error building app")

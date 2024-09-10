@@ -159,7 +159,12 @@ export const searchAttrValue = createAsyncThunk(
   async ({ attr, val }, { rejectWithValue }) => {
     try {
       if (!attr || !val) return [];
-      const res = await invoke("search_entity_with_attr_value", { attr, val });
+      let res = await invoke("search_entity_with_attr_value", { attr, val });
+      if (["FALSE", "False", "false", "No", "no", "n"].includes(val)) {
+        // also search for null values
+        const append = await invoke("search_entity_without_attr", { attr });
+        res = [...res, ...append];
+      }
       return res;
     } catch (e) {
       console.error("API failed -", e);

@@ -10,7 +10,7 @@ const ValueRow = ({ data }) => {
   const [dvalue, setDValue] = useState(null);
 
   function submitValue() {
-    if (!fvalue && fvalue !== 0) return setIsEditing(false);
+    if (!fvalue && fvalue !== 0 && fvalue !== false) return setIsEditing(false);
     const form = { ...data };
     switch (data.value_type) {
       case "str":

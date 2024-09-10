@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use std::env;
 use std::time::Duration;
 
@@ -16,6 +14,7 @@ pub struct DBInterface {
 	db: Option<Pool<MySql>>
 }
 
+#[allow(unused)]
 impl DBInterface {
 	pub fn new() -> Self {
 		DBInterface { db:None }
@@ -184,6 +183,26 @@ impl DBInterface {
 		Ok(rows)
 	}
 
+	pub async fn search_entity_with_attr(&self, attr: String) -> Result<Vec<EavEntity>, sqlx::Error> {
+		let pool = self.get_pool()?;
+		let query = "SELECT e.* FROM eav_entities e ".to_owned() +
+			"LEFT JOIN eav_values v ON e.id = v.entity_id AND v.attr_id IN " +
+			"(SELECT id FROM eav_attrs WHERE attr = ?) " +
+			"WHERE v.attr_id IS NOT NULL";
+		let rows = sqlx::query_as::<_, EavEntity>(&query).bind(attr).fetch_all(pool).await?;
+		Ok(rows)
+	}
+
+	pub async fn search_entity_without_attr(&self, attr: String) -> Result<Vec<EavEntity>, sqlx::Error> {
+		let pool = self.get_pool()?;
+		let query = "SELECT e.* FROM eav_entities e ".to_owned() +
+			"LEFT JOIN eav_values v ON e.id = v.entity_id AND v.attr_id IN " +
+			"(SELECT id FROM eav_attrs WHERE attr = ?) " +
+			"WHERE v.attr_id IS NULL";
+		let rows = sqlx::query_as::<_, EavEntity>(&query).bind(attr).fetch_all(pool).await?;
+		Ok(rows)
+	}
+
 	pub async fn search_entity_with_attr_value(&self, attr: String, val: String) -> Result<Vec<EavEntity>, sqlx::Error> {
 		let views = self.fetch_views_by_attr_value(attr, val).await?;
 		let pool = self.get_pool()?;
@@ -293,13 +312,16 @@ impl DBInterface {
 	pub async fn fetch_views_by_attr_value(&self, attr: String, val: String) -> Result<Vec<EavView>, sqlx::Error> {
 		let pool = self.get_pool()?;
 		let float_val = "^".to_owned() + &val + "[.]?";
+		let bool_val = match val.as_str() {
+			"FALSE" | "False" | "false" | "NO" | "No" | "no" | "n" => "0",
+			_ => "1"
+		};
 		// note: time is excluded as datetime requires special formatting
-		// note: only bool == TRUE values can be searched
+		// note: bool == null cannot be searched
 		let query = "SELECT * FROM all_existing_eav_data WHERE attr = ? AND (".to_owned() +
-			"value_str REGEXP ? OR value_int = ? OR value_float REGEXP ? OR value_bool = 1)";
-		println!("query: {}", &query);
+			"value_str REGEXP ? OR value_int = ? OR value_float REGEXP ? OR value_bool = ?)";
 		let rows = sqlx::query_as::<_, EavView>(&query)
-			.bind(&attr).bind(&val).bind(&val).bind(&float_val)
+			.bind(&attr).bind(&val).bind(&val).bind(&float_val).bind(&bool_val)
 			.fetch_all(pool)
 			.await?;
 		Ok(rows)
