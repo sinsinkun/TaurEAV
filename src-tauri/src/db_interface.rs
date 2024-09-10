@@ -1,6 +1,7 @@
 use std::env;
 use std::time::Duration;
 
+use chrono::{DateTime, Utc};
 use dotenvy::dotenv;
 use sqlx::{mysql::MySqlPoolOptions, Pool, MySql};
 
@@ -267,9 +268,45 @@ impl DBInterface {
 
 	pub async fn create_value(&self, input: EavValue) -> Result<EavValue, sqlx::Error> {
 		let pool = self.get_pool()?;
-		let debug = sqlx::query("CALL create_eav_value(?, ?, ?, ?, ?, ?, ?)")
-			.bind(input.entity_id).bind(input.attr_id).bind(input.value_str).bind(input.value_int)
-			.bind(input.value_float).bind(input.value_time).bind(input.value_bool)
+		let attr = sqlx::query_as::<_, EavAttribute>("SELECT * FROM eav_attrs WHERE id = ?")
+			.bind(input.attr_id).fetch_one(pool).await?;
+		// sanitize input
+		let mut str_val: Option<String> = None;
+		let mut int_val: Option<i32> = None;
+		let mut float_val: Option<f32> = None;
+		let mut time_val: Option<DateTime<Utc>> = None;
+		let mut bool_val: Option<bool> = None;
+		let mut val_exists = false;
+		match attr.value_type.as_str() {
+			"str" => if input.value_str.is_some() {
+				str_val = input.value_str;
+			}
+			"int" => if input.value_int.is_some() {
+				int_val = input.value_int;
+				str_val = input.value_str; // optionally append a unit
+			}
+			"float" => if input.value_float.is_some() {
+				float_val = input.value_float;
+				str_val = input.value_str; // optionally append a unit
+			}
+			"time" => if input.value_time.is_some() {
+				time_val = input.value_time;
+			}
+			"bool" => if input.value_bool.is_some() {
+				bool_val = input.value_bool;
+			}
+			_ => { val_exists = false }
+		}
+		if !val_exists {
+			return Err(sqlx::Error::ColumnNotFound("value_type_mismatch".to_owned()));
+		}
+		// perform insertion
+		let query = "INSERT INTO eav_values ".to_owned() +
+			"(entity_id, attr_id, value_str, value_int, value_float, value_time, value_bool) " +
+			"VALUES (?, ?, ?, ?, ?, ?, ?)";
+		let debug = sqlx::query(&query)
+			.bind(input.entity_id).bind(input.attr_id).bind(str_val).bind(int_val)
+			.bind(float_val).bind(time_val).bind(bool_val)
 			.execute(pool).await?;
 		// note: execute is not waiting for transaction to finish before returning
 		async_std::task::sleep(Duration::from_millis(10)).await;

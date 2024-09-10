@@ -17,4 +17,4 @@ Note: the console keeps the MySQL service running, do not close it
   - Will use MySQL default if not provided
 
 ## Future ideas
-- Add units for float/int fields to value_str
+- Add units for float/int fields to value_str (front end)

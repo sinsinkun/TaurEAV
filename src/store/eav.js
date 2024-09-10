@@ -160,7 +160,7 @@ export const searchAttrValue = createAsyncThunk(
     try {
       if (!attr || !val) return [];
       let res = await invoke("search_entity_with_attr_value", { attr, val });
-      if (["FALSE", "False", "false", "No", "no", "n"].includes(val)) {
+      if (["FALSE", "False", "false", "No", "no", "n", "NULL", "null"].includes(val)) {
         // also search for null values
         const append = await invoke("search_entity_without_attr", { attr });
         res = [...res, ...append];
