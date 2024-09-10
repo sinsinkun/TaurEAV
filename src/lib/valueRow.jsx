@@ -18,10 +18,10 @@ const ValueRow = ({ data }) => {
         form.value_str = fvalue;
         break;
       case "int":
-        form.value_int = Number(v1);
+        form.value_int = Number(fvalue);
         break;
       case "float":
-        form.value_float = Number(v2);
+        form.value_float = Number(fvalue);
         break;
       case "time":
         form.value_time = new Date(fvalue);
@@ -32,7 +32,7 @@ const ValueRow = ({ data }) => {
       default:
         break;
     }
-    if (unit && !data.value_str) data.value_str = unit;
+    if (unit && data.value_type !== "str") data.value_str = unit;
     if (!data.value_id) dispatch(addValue(form));
     else if (data.allow_multiple) dispatch(addValue(form));
     else dispatch(updateValue(form));
