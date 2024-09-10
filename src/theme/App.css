@@ -274,6 +274,11 @@ nav .submenu {
   max-width: 30em;
 }
 
+.value-field-container .subfield {
+  width: 40%;
+  margin-left: 8px;
+}
+
 /* ---- EAV FORM ---- */
 .modal-container {
   position: absolute;

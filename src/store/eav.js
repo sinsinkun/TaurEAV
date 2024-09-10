@@ -96,8 +96,8 @@ export const addValue = createAsyncThunk(
       const { entity_id, attr_id, value_str, value_int, value_float, value_time, value_bool } = input;
       if (!entity_id || !attr_id) throw new Error("Missing required inputs");
       const fnInput = {
-        id: 0, created_at: new Date().toISOString(), entity_id, attr_id, value_str, 
-        value_int: Number(value_int), value_float: Number(value_float), value_time, value_bool
+        id: 0, created_at: new Date().toISOString(), entity_id, attr_id, 
+        value_str, value_int, value_float, value_time, value_bool
       }
       const res = await invoke("create_value", { input: fnInput });
       return res;
@@ -112,11 +112,11 @@ export const updateValue = createAsyncThunk(
   'eav/updateValue',
   async (input, { rejectWithValue }) => {
     try {
-      const { value_id, entity_id, attr_id, value_str, value_int, value_float, value_time, value_bool } = input;
+      const { value_id, created_at, entity_id, attr_id, value_str, value_int, value_float, value_time, value_bool } = input;
       if (!value_id) throw new Error("Missing required inputs");
       const fnInput = {
-        id: value_id, created_at: new Date().toISOString(), entity_id, attr_id, value_str, 
-        value_int: Number(value_int), value_float: Number(value_float), value_time, value_bool
+        id: value_id, created_at, entity_id, attr_id, 
+        value_str, value_int, value_float, value_time, value_bool
       }
       const res = await invoke("update_value", { input: fnInput });
       return res;

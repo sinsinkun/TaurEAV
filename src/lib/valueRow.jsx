@@ -7,6 +7,7 @@ const ValueRow = ({ data }) => {
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
   const [fvalue, setFValue] = useState("");
+  const [unit, setUnit] = useState("");
   const [dvalue, setDValue] = useState(null);
 
   function submitValue() {
@@ -17,20 +18,21 @@ const ValueRow = ({ data }) => {
         form.value_str = fvalue;
         break;
       case "int":
-        form.value_int = fvalue;
+        form.value_int = Number(v1);
         break;
       case "float":
-        form.value_float = fvalue;
+        form.value_float = Number(v2);
         break;
       case "time":
-        form.value_time = fvalue;
+        form.value_time = new Date(fvalue);
         break;
       case "bool":
-        form.value_bool = fvalue;
+        form.value_bool = Boolean(fvalue);
         break;
       default:
         break;
     }
+    if (unit && !data.value_str) data.value_str = unit;
     if (!data.value_id) dispatch(addValue(form));
     else if (data.allow_multiple) dispatch(addValue(form));
     else dispatch(updateValue(form));
@@ -40,8 +42,9 @@ const ValueRow = ({ data }) => {
   }
 
   function handleInput(e) {
-    const { value } = e.target;
-    setFValue(value);
+    const { name, value } = e.target;
+    if (name === "unit") setUnit(value);
+    else setFValue(value);
   }
 
   function handleCheck(e) {
@@ -63,6 +66,7 @@ const ValueRow = ({ data }) => {
         if (data.value_int || data.value_int === 0) {
           if (!data.allow_multiple) setFValue(data.value_int);
           setDValue(String(data.value_int));
+          if (data.value_str) setUnit(data.value_str);
         } else {
           setDValue("-")
         }
@@ -71,6 +75,7 @@ const ValueRow = ({ data }) => {
         if (data.value_float || data.value_float === 0) {
           if (!data.allow_multiple) setFValue(data.value_float);
           setDValue(data.value_float.toFixed(2));
+          if (data.value_str) setUnit(data.value_str);
         } else {
           setDValue("-");
         }
@@ -104,18 +109,21 @@ const ValueRow = ({ data }) => {
       <div>{data.attr} {data.allow_multiple && "(+)"}</div>
       {isEditing ? (
         <div className="value-field-container">
-          {data.value_type === "str" && <input type="text" value={fvalue} onChange={handleInput} />}
-          {data.value_type === "int" && <input type="number" value={fvalue} onChange={handleInput} />}
-          {data.value_type === "float" && <input type="number" value={fvalue} onChange={handleInput} />}
-          {data.value_type === "time" && <input type="datetime-local" value={fvalue} onChange={handleInput} />}
-          {data.value_type === "bool" && <input type="checkbox" checked={fvalue} onChange={handleCheck} />}
+          {data.value_type === "str" && <input type="text" placeholder="value" name="fvalue" value={fvalue} onChange={handleInput} />}
+          {data.value_type === "int" && <input type="number" placeholder="value" name="fvalue" value={fvalue} onChange={handleInput} />}
+          {data.value_type === "float" && <input type="number" placeholder="value" name="fvalue" value={fvalue} onChange={handleInput} />}
+          {data.value_type === "time" && <input type="datetime-local" name="fvalue" value={fvalue} onChange={handleInput} />}
+          {data.value_type === "bool" && <input type="checkbox" name="fvalue" checked={fvalue} onChange={handleCheck} />}
+          {data.value_type === "int" || data.value_type === "float" && (
+            <input type="text" placeholder="unit" name="unit" className="subfield" value={unit} onChange={handleInput} />
+          )}
           <div style={{ flexGrow:1 }}></div>
-          <button onClick={submitValue}>{data.allow_multiple ? "Add" : "Update"}</button>
+          <button onClick={submitValue}>{(data.value_id && !data.allow_multiple) ? "Update" : "Add"}</button>
           <button onClick={() => setIsEditing(false)}>Cancel</button>
         </div>
       ) : (
         <div className="value-display-container" onClick={() => setIsEditing(true)}>
-          {dvalue}
+          {dvalue} {unit}
         </div>
       )}
     </div>
