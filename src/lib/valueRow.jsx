@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
-import { addValue, updateValue } from "../store/eav";
+import { addValue, updateValue, openForm, setFormInput } from "../store/eav";
 
 const ValueRow = ({ data }) => {
   const dispatch = useDispatch();
+  const showDelete = useSelector((state) => state.eav.showDelete);
   const [isEditing, setIsEditing] = useState(false);
   const [fvalue, setFValue] = useState("");
   const [unit, setUnit] = useState("");
@@ -50,6 +51,11 @@ const ValueRow = ({ data }) => {
   function handleCheck(e) {
     const { checked } = e.target;
     setFValue(checked);
+  }
+
+  function confirmDeleteValue(id) {
+    dispatch(openForm("delValue"));
+    dispatch(setFormInput({ id: id }));
   }
 
   useEffect(() => {
@@ -135,6 +141,11 @@ const ValueRow = ({ data }) => {
           <div style={{ flexGrow:1 }}></div>
           <button onClick={submitValue}>{(data.value_id && !data.allow_multiple) ? "Update" : "Add"}</button>
           <button onClick={() => setIsEditing(false)}>Cancel</button>
+          {showDelete && (
+            <button onClick={() => confirmDeleteValue(data.value_id)} className="square">
+              X
+            </button>
+          )}
         </div>
       ) : (
         <div className="value-display-container" onClick={() => setIsEditing(true)}>

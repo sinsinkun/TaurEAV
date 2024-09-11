@@ -170,6 +170,20 @@ export const deleteEntity = createAsyncThunk(
   }
 )
 
+export const deleteValue = createAsyncThunk(
+  'eav/deleteValue',
+  async (id, { rejectWithValue }) => {
+    try {
+      if (!id) throw new Error("No id provided");
+      await invoke("delete_value", { id });
+      return id;
+    } catch (e) {
+      console.error("API failed -", e);
+      return rejectWithValue(null);
+    }
+  }
+)
+
 export const searchEntity = createAsyncThunk(
   'eav/searchEntity',
   async ({ regex, extended }, { rejectWithValue }) => {
@@ -424,6 +438,18 @@ export const eavSlice = createSlice({
       })
       if (idx > -1) state.entities.splice(idx, 1);
     }).addCase(deleteEntity.rejected, (state) => {
+      state.loading = false;
+    });
+    builder.addCase(deleteValue.pending, (state) => {
+      state.loading = true;
+    }).addCase(deleteValue.fulfilled, (state, action) => {
+      state.loading = false;
+      let idx = -1;
+      state.values.forEach((e, i) => {
+        if (e.id === action.payload) idx = i;
+      })
+      if (idx > -1) state.entities.splice(idx, 1);
+    }).addCase(deleteValue.rejected, (state) => {
       state.loading = false;
     });
     builder.addCase(searchEntity.pending, (state) => {

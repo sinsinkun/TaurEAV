@@ -8,6 +8,7 @@ import {
   closeForm,
   deleteEntity,
   deleteEntityType,
+  deleteValue,
   setFormInput,
 } from "../store/eav";
 
@@ -37,6 +38,12 @@ const FormModal = () => {
     }
     if (formType === "delEntity") {
       dispatch(deleteEntity(formInput.id));
+      dispatch(setFormInput({}));
+      close();
+      return;
+    }
+    if (formType === "delValue") {
+      dispatch(deleteValue(formInput.id));
       dispatch(setFormInput({}));
       close();
       return;
@@ -96,6 +103,9 @@ const FormModal = () => {
       case "delEntityType":
         setTitle("Delete Category?");
         break;
+      case "delValue":
+        setTitle("Delete Value?");
+        break;
       default:
         setTitle("Unknown");
         break;
@@ -153,7 +163,7 @@ const FormModal = () => {
         <div className="btn-ctn">
           <button onClick={close}>Close</button>
           <button type="submit">
-            {["delEntityType","delEntity"].includes(formType) ? "Confirm" : "Add"}
+            {["delEntityType","delEntity","delValue"].includes(formType) ? "Confirm" : "Add"}
           </button>
         </div>
         {!!err && (
