@@ -107,7 +107,6 @@ async fn create_attr(
 #[tauri::command(rename_all = "snake_case")]
 async fn create_value(state: State<'_, TState>, input: EavValue) -> Result<EavValue, String> {
     let dbi = state.db.lock().await;
-    println!("help {:?}", &input);
     match dbi.create_value(input).await {
         Ok(v) => Ok(v),
         Err(e) => {
