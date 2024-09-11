@@ -17,7 +17,7 @@ function Help() {
         <p>Search any valid regex statement for entity names.</p>
         <p>
           Attribute values can be searched with "attr: value", and numerical 
-          attributes can be compared with "attr {">"} value" or "attr {"<"}
+          attributes can be compared with "attr {">"} value" or "attr {"<"} value".
         </p>
         <br />
         <button onClick={closeModal}>Close</button>
