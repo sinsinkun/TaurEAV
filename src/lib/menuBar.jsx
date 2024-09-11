@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { connect, openForm, toggleShowDel } from "../store/eav";
+import { connect, openForm, toggleShowDel, toggleShowHelp } from "../store/eav";
 
 function MenuBar() {
   const dispatch = useDispatch();
@@ -32,6 +32,10 @@ function MenuBar() {
     dispatch(toggleShowDel());
   }
 
+  function toggleHelp() {
+    dispatch(toggleShowHelp());
+  }
+
   return (
     <nav>
       <button onClick={openSubmenu}>File</button>
@@ -43,7 +47,7 @@ function MenuBar() {
           <button onClick={toggleDeletion}>
             {showDelete ? "Disable Deletion" : "Enable Deletion"}
           </button>
-          <button>Help</button>
+          <button onClick={toggleHelp}>Help</button>
         </div>
       )}
     </nav>

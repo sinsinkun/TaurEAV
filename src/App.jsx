@@ -5,6 +5,7 @@ import store from "./store";
 import EavTable from "./lib/eavTable";
 import MenuBar from "./lib/menuBar";
 import SearchBar from "./lib/searchBar";
+import Help from "./lib/helpModal";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <MenuBar />
         <SearchBar />
         <EavTable />
+        <Help />
       </div>
     </Provider>
   );

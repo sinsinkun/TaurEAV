@@ -230,6 +230,7 @@ export const eavSlice = createSlice({
     activeEnType: null,
     activeEntity: null,
     showDelete: false,
+    showHelp: false,
   },
   reducers: {
     clearEntityTypes: (state) => {
@@ -264,6 +265,9 @@ export const eavSlice = createSlice({
     },
     toggleShowDel: (state) => {
       state.showDelete = !state.showDelete;
+    },
+    toggleShowHelp: (state) => {
+      state.showHelp = !state.showHelp;
     }
   },
   extraReducers: (builder) => {
@@ -468,6 +472,7 @@ export const {
   setActiveEnType,
   setActiveEntity,
   toggleShowDel,
+  toggleShowHelp,
 } = eavSlice.actions;
 
 export default eavSlice.reducer;
