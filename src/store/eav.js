@@ -142,10 +142,25 @@ export const updateValue = createAsyncThunk(
   }
 )
 
+export const deleteEntityType = createAsyncThunk(
+  'eav/deleteEntityType',
+  async (id, { rejectWithValue }) => {
+    try {
+      if (!id) throw new Error("No id provided");
+      await invoke("delete_entity_type", { id });
+      return id;
+    } catch (e) {
+      console.error("API failed -", e);
+      return rejectWithValue(null);
+    }
+  }
+)
+
 export const deleteEntity = createAsyncThunk(
   'eav/deleteEntity',
   async (id, { rejectWithValue }) => {
     try {
+      if (!id) throw new Error("No id provided");
       await invoke("delete_entity", { id });
       return id;
     } catch (e) {
@@ -188,6 +203,20 @@ export const searchAttrValue = createAsyncThunk(
   }
 )
 
+export const searchAttrValueComparison = createAsyncThunk(
+  'eav/searchAttrValueComparison',
+  async ({ attr, val, op }, { rejectWithValue }) => {
+    try {
+      if (!attr || !val || !op) return [];
+      let res = await invoke("search_entity_with_attr_value_comparison", { attr, val, op });
+      return res;
+    } catch (e) {
+      console.error("API failed -", e);
+      return rejectWithValue(null);
+    }
+  }
+)
+
 export const eavSlice = createSlice({
   name: 'eav',
   initialState: {
@@ -200,6 +229,7 @@ export const eavSlice = createSlice({
     formInput: {},
     activeEnType: null,
     activeEntity: null,
+    showDelete: false,
   },
   reducers: {
     clearEntityTypes: (state) => {
@@ -231,6 +261,9 @@ export const eavSlice = createSlice({
       }
       const [active] = state.entities.filter(x => x.id === action.payload);
       if (active) state.activeEntity = active;
+    },
+    toggleShowDel: (state) => {
+      state.showDelete = !state.showDelete;
     }
   },
   extraReducers: (builder) => {
@@ -365,6 +398,18 @@ export const eavSlice = createSlice({
     }).addCase(updateValue.rejected, (state) => {
       state.loading = false;
     });
+    builder.addCase(deleteEntityType.pending, (state) => {
+      state.loading = true;
+    }).addCase(deleteEntityType.fulfilled, (state, action) => {
+      state.loading = false;
+      let idx = -1;
+      state.entityTypes.forEach((e, i) => {
+        if (e.id === action.payload) idx = i;
+      })
+      if (idx > -1) state.entityTypes.splice(idx, 1);
+    }).addCase(deleteEntityType.rejected, (state) => {
+      state.loading = false;
+    });
     builder.addCase(deleteEntity.pending, (state) => {
       state.loading = true;
     }).addCase(deleteEntity.fulfilled, (state, action) => {
@@ -399,6 +444,17 @@ export const eavSlice = createSlice({
       state.loading = false;
       state.entities = [];
     });
+    builder.addCase(searchAttrValueComparison.pending, (state) => {
+      state.loading = true;
+      state.activeEnType = null;
+    }).addCase(searchAttrValueComparison.fulfilled, (state, action) => {
+      state.loading = false;
+      state.entities = action.payload;
+      state.activeEntity = null;
+    }).addCase(searchAttrValueComparison.rejected, (state) => {
+      state.loading = false;
+      state.entities = [];
+    });
   }
 });
 
@@ -411,6 +467,7 @@ export const {
   setFormInput,
   setActiveEnType,
   setActiveEntity,
+  toggleShowDel,
 } = eavSlice.actions;
 
 export default eavSlice.reducer;

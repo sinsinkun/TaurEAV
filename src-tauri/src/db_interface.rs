@@ -10,6 +10,10 @@ use crate::eav_structs::{ EavAttribute, EavEntityType, EavEntity, EavValue, EavV
 #[derive(Debug, sqlx::FromRow)]
 struct Int(u32);
 
+#[allow(unused)]
+#[derive(Debug)]
+pub enum Operator { GREATER, LESSER }
+
 #[derive(Debug)]
 pub struct DBInterface {
 	db: Option<Pool<MySql>>
@@ -24,6 +28,10 @@ impl DBInterface {
 	// -- HELPERS --
 	pub async fn connect(&mut self) -> Result<String, sqlx::Error> {
 		// grab database url
+		if (self.db.is_some()) {
+			println!("Already connected to database");
+			return Ok("OK".to_owned())
+		}
 		let database_url: String = match dotenv() {
 			Ok(_) => {
 				let mut url = "".to_owned();
@@ -92,10 +100,12 @@ impl DBInterface {
 		// delete entities + values of entity type
 		for e in entities { self.delete_entity(e.id).await?; }
 		// delete attributes for entity type
-		let debug = sqlx::query("DELETE FROM eav_attrs where entity_type_id = ?")
+		sqlx::query("DELETE FROM eav_attrs where entity_type_id = ?")
+			.bind(id.to_string()).execute(pool).await?;
+		// delete entity type
+		let debug = sqlx::query("DELETE FROM eav_entity_types where id = ?")
 			.bind(id.to_string()).execute(pool).await?;
 		println!("delete_entity_type: {:?}", debug);
-		// delete entity type
 		Ok("OK".to_owned())
 	}
 
@@ -213,6 +223,24 @@ impl DBInterface {
 		let query = "SELECT * FROM eav_entities WHERE id IN (".to_owned() + &ent_ids + ")";
 		let rows = sqlx::query_as::<_, EavEntity>(&query).fetch_all(pool).await?;
 		println!("search_entity_with_attr_value: {} results", rows.len());
+		Ok(rows)
+	}
+
+	pub async fn search_entity_with_attr_value_comparison(
+		&self, attr: String, val: String, operator: Operator
+	) -> Result<Vec<EavEntity>, sqlx::Error> {
+		let views = self.fetch_views_by_attr_value_comparison(attr, val, operator).await?;
+		let pool = self.get_pool()?;
+		let mut ent_ids = String::new();
+		for v in views {
+			if let Some(id) = v.entity_id {
+				ent_ids = ent_ids + &id.to_string() + ",";
+			}
+		}
+		ent_ids.pop();
+		let query = "SELECT * FROM eav_entities WHERE id IN (".to_owned() + &ent_ids + ")";
+		let rows = sqlx::query_as::<_, EavEntity>(&query).fetch_all(pool).await?;
+		println!("search_entity_with_attr_value_comparison: {} results", rows.len());
 		Ok(rows)
 	}
 
@@ -363,6 +391,25 @@ impl DBInterface {
 			.fetch_all(pool)
 			.await?;
 		println!("fetch_views_by_attr_value: {} results", rows.len());
+		Ok(rows)
+	}
+
+	pub async fn fetch_views_by_attr_value_comparison(
+		&self, attr: String, val: String, operator: Operator
+	) -> Result<Vec<EavView>, sqlx::Error> {
+		let pool = self.get_pool()?;
+		// only handling int/float values
+		let op = match operator {
+			Operator::GREATER => " > ",
+			Operator::LESSER => " < "
+		};
+		let query = "SELECT * FROM all_existing_eav_data WHERE attr = ? AND (".to_owned() +
+			"value_int" + op + "? OR value_float" + op + "?)";
+		let rows = sqlx::query_as::<_, EavView>(&query)
+			.bind(&attr).bind(&val).bind(&val)
+			.fetch_all(pool)
+			.await?;
+		println!("fetch_views_by_attr_value_comparison: {} results", rows.len());
 		Ok(rows)
 	}
 }

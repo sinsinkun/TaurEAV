@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 
-import { addAttribute, addEntity, addEntityType, closeForm, deleteEntity, setFormInput } from "../store/eav";
+import {
+  addAttribute,
+  addEntity,
+  addEntityType,
+  closeForm,
+  deleteEntity,
+  deleteEntityType,
+  setFormInput,
+} from "../store/eav";
 
 const FormModal = () => {
   const dispatch = useDispatch();
@@ -21,9 +29,16 @@ const FormModal = () => {
 
   function handleSubmit(e) {
     e.preventDefault();
+    if (formType === "delEntityType") {
+      dispatch(deleteEntityType(formInput.id));
+      dispatch(setFormInput({}));
+      close();
+      return;
+    }
     if (formType === "delEntity") {
       dispatch(deleteEntity(formInput.id));
       dispatch(setFormInput({}));
+      close();
       return;
     }
     const form = { ...fields };
@@ -77,6 +92,9 @@ const FormModal = () => {
         break;
       case "delEntity":
         setTitle("Delete Entity?");
+        break;
+      case "delEntityType":
+        setTitle("Delete Category?");
         break;
       default:
         setTitle("Unknown");
@@ -134,7 +152,9 @@ const FormModal = () => {
         {formType === "attr" && renderAttrFields()}
         <div className="btn-ctn">
           <button onClick={close}>Close</button>
-          <button type="submit">{formType === "delEntity" ? "Confirm" : "Add"}</button>
+          <button type="submit">
+            {["delEntityType","delEntity"].includes(formType) ? "Confirm" : "Add"}
+          </button>
         </div>
         {!!err && (
           <div className="err-msg">ERR: {err}</div>

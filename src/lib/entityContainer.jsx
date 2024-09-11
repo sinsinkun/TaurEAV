@@ -9,6 +9,7 @@ const EntityContainer = () => {
   const entityTypes = useSelector((state) => state.eav.entityTypes);
   const activeTab = useSelector((state) => state.eav.activeEnType);
   const activeEntity = useSelector((state) => state.eav.activeEntity);
+  const showDelete = useSelector((state) => state.eav.showDelete);
 
   function fetchData(id) {
     if (activeEntity?.id === id) {
@@ -65,9 +66,11 @@ const EntityContainer = () => {
               <button onClick={() => fetchData(e.id)}>
                 Details
               </button>
-              <button onClick={() => confirmDeleteEntity(e.id)} className="square">
-                X
-              </button>
+              {showDelete && (
+                <button onClick={() => confirmDeleteEntity(e.id)} className="square">
+                  X
+                </button>
+              )}
             </div>
             {activeEntity?.id === e.id ? <EntityData /> : null}
           </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 
-import { searchAttrValue, searchEntity } from "../store/eav";
+import { searchAttrValue, searchAttrValueComparison, searchEntity } from "../store/eav";
 
 function SearchBar() {
   const dispatch = useDispatch();
@@ -19,6 +19,13 @@ function SearchBar() {
   }
 
   function handleSubmit() {
+    const comparisonRegex = /^[a-z0-9_]+? [<>] /i;
+    if (comparisonRegex.test(v)) {
+      const [attr, op, val] = v.split(" ");
+      if (isNaN(Number(val))) return console.error("Value is not a number");
+      dispatch(searchAttrValueComparison({ attr, val, op }));
+      return;
+    }
     const attrRegex = /^[a-z0-9_]+?:/i;
     if (attrRegex.test(v)) {
       const [attr, val] = v.split(": ");

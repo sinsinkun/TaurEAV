@@ -8,7 +8,7 @@ use tauri::{RunEvent, State};
 
 mod db_interface;
 mod eav_structs;
-use db_interface::DBInterface;
+use db_interface::{DBInterface, Operator};
 
 struct TState {
     pub db: Mutex<DBInterface>
@@ -129,6 +129,18 @@ async fn update_value(state: State<'_, TState>, input: EavValue) -> Result<EavVa
 }
 
 #[tauri::command]
+async fn delete_entity_type(state: State<'_, TState>, id: u32) -> Result<String, String> {
+    let dbi = state.db.lock().await;
+    match dbi.delete_entity_type(id).await {
+        Ok(v) => Ok(v),
+        Err(e) => {
+            println!("Failed to delete entity: {:?}", e);
+            Err(e.to_string())
+        }
+    }
+}
+
+#[tauri::command]
 async fn delete_entity(state: State<'_, TState>, id: u32) -> Result<String, String> {
     let dbi = state.db.lock().await;
     match dbi.delete_entity(id).await {
@@ -211,6 +223,27 @@ async fn search_entity_without_attr(state: State<'_, TState>, attr: String) -> R
     }
 }
 
+#[tauri::command]
+async fn search_entity_with_attr_value_comparison(
+    state: State<'_, TState>, attr: String, val: String, op: String
+) -> Result<Vec<EavEntity>, String> {
+    let dbi = state.db.lock().await;
+    let optr: Operator = match op.as_str() {
+        ">" => Operator::GREATER,
+        "<" => Operator::LESSER,
+        _ => {
+            return Err("ERR: OperatorNotValid".to_owned());
+        }
+    };
+    match dbi.search_entity_with_attr_value_comparison(attr, val, optr).await {
+        Ok(v) => Ok(v),
+        Err(e) => {
+            println!("Failed to fetch entities: {:?}", e);
+            Err(e.to_string())
+        }
+    }
+}
+
 fn main() {
     // launch SQL server
     let mut cmd = Command::new("C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqld.exe")
@@ -220,9 +253,10 @@ fn main() {
         .manage(TState { db: Mutex::new(DBInterface::new()) })
         .invoke_handler(tauri::generate_handler![
             connect, fetch_entity_types, fetch_entities, fetch_values,
-            create_entity_type, create_entity, create_attr, create_value, 
-            update_value, delete_entity, delete_attr, delete_value, 
+            create_entity_type, create_entity, create_attr, create_value, update_value, 
+            delete_entity_type, delete_entity, delete_attr, delete_value, 
             search_entity, search_entity_with_attr_value, search_entity_without_attr,
+            search_entity_with_attr_value_comparison,
         ])
         .build(tauri::generate_context!())
         .expect("Error building app")

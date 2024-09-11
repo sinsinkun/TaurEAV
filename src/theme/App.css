@@ -139,11 +139,11 @@ nav .submenu {
   top: 24px;
   padding: 4px 0;
   box-shadow: 0 0 4px #1b1c1f;
-  text-align: left;
 }
 
 .submenu > * {
   margin-bottom: 4px;
+  text-align: left;
 }
 
 /* ---- SEARCH BAR ---- */
@@ -188,10 +188,15 @@ nav .submenu {
   border-radius: 2em;
 }
 
-.eav-table .tab-container {
+.eav-table .tabs-container {
   display: flex;
   font-size: 1em;
   font-weight: 600;
+  user-select: none;
+}
+
+.eav-table .tab-container {
+  position: relative;
 }
 
 .eav-table .tab {
@@ -209,6 +214,24 @@ nav .submenu {
 
 .eav-table .tab.selected {
   background-color: #357;
+}
+
+.eav-table .del-icon {
+  position: absolute;
+  top: -30%;
+  left: 85%;
+  background-color: #546f86;
+  line-height: 20px;
+  height: 24px;
+  border-radius: 12px;
+  aspect-ratio: 1;
+  z-index: 5;
+  box-shadow: 0 0 4px #000000;
+}
+
+.eav-table .del-icon:hover {
+  cursor: pointer;
+  background-color: rgb(49, 74, 82);
 }
 
 .eav-table .entry-container {

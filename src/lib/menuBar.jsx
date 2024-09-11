@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { connect, openForm } from "../store/eav";
+import { connect, openForm, toggleShowDel } from "../store/eav";
 
 function MenuBar() {
   const dispatch = useDispatch();
   const connected = useSelector((state) => state.eav.connected);
+  const showDelete = useSelector((state) => state.eav.showDelete);
   const [openFile, setOpenFile] = useState(false);
 
   function closeOnClick(e) {
@@ -27,6 +28,10 @@ function MenuBar() {
     dispatch(openForm("entityType"));
   }
 
+  function toggleDeletion() {
+    dispatch(toggleShowDel());
+  }
+
   return (
     <nav>
       <button onClick={openSubmenu}>File</button>
@@ -35,7 +40,10 @@ function MenuBar() {
           <button onClick={reconnect}>Reconnect</button>
           <button onClick={newEntityMenu}>New Category</button>
           {/* <button onClick={todo}>Delete Category</button> */}
-          {/* <button onClick={todo}>Enable Deletion</button> */}
+          <button onClick={toggleDeletion}>
+            {showDelete ? "Disable Deletion" : "Enable Deletion"}
+          </button>
+          <button>Help</button>
         </div>
       )}
     </nav>
