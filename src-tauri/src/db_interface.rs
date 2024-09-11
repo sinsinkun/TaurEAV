@@ -303,7 +303,7 @@ impl DBInterface {
 		let mut float_val: Option<f32> = None;
 		let mut time_val: Option<DateTime<Utc>> = None;
 		let mut bool_val: Option<bool> = None;
-		let mut val_exists = false;
+		let mut val_exists = true;
 		match attr.value_type.as_str() {
 			"str" => if input.value_str.is_some() {
 				str_val = input.value_str;

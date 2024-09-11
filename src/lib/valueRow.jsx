@@ -82,8 +82,13 @@ const ValueRow = ({ data }) => {
         break;
       case "time":
         if (data.value_time) {
-          if (!data.allow_multiple) setFValue(data.valueTime);
-          setDValue(data.value_time);
+          const converted = new Date(data.value_time);
+          const formatted = 
+            converted.getUTCFullYear() + "-" + 
+            (converted.getUTCMonth() + 1) + "-" + 
+            converted.getUTCDate();
+          if (!data.allow_multiple) setFValue(formatted);
+          setDValue(formatted);
         } else {
           setDValue("-");
         }
@@ -109,11 +114,21 @@ const ValueRow = ({ data }) => {
       <div>{data.attr} {data.allow_multiple && "(+)"}</div>
       {isEditing ? (
         <div className="value-field-container">
-          {data.value_type === "str" && <input type="text" placeholder="value" name="fvalue" value={fvalue} onChange={handleInput} />}
-          {data.value_type === "int" && <input type="number" placeholder="value" name="fvalue" value={fvalue} onChange={handleInput} />}
-          {data.value_type === "float" && <input type="number" placeholder="value" name="fvalue" value={fvalue} onChange={handleInput} />}
-          {data.value_type === "time" && <input type="datetime-local" name="fvalue" value={fvalue} onChange={handleInput} />}
-          {data.value_type === "bool" && <input type="checkbox" name="fvalue" checked={fvalue} onChange={handleCheck} />}
+          {data.value_type === "str" && (
+            <input type="text" placeholder="value" name="fvalue" value={fvalue} onChange={handleInput} />
+          )}
+          {data.value_type === "int" && (
+            <input type="number" placeholder="value" name="fvalue" value={fvalue} onChange={handleInput} />
+          )}
+          {data.value_type === "float" && (
+            <input type="number" placeholder="value" name="fvalue" value={fvalue} onChange={handleInput} />
+          )}
+          {data.value_type === "time" && (
+            <input type="date" name="fvalue" value={fvalue} onChange={handleInput} />
+          )}
+          {data.value_type === "bool" && (
+            <input type="checkbox" name="fvalue" checked={fvalue} onChange={handleCheck} />
+          )}
           {data.value_type === "int" || data.value_type === "float" && (
             <input type="text" placeholder="unit" name="unit" className="subfield" value={unit} onChange={handleInput} />
           )}
