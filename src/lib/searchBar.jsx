@@ -19,20 +19,21 @@ function SearchBar() {
   }
 
   function handleSubmit() {
-    const comparisonRegex = /^[a-z0-9_]+? [<>] /i;
+    const comparisonRegex = /^[A-Za-z0-9_]+? [<>] /i;
     if (comparisonRegex.test(v)) {
       const [attr, op, val] = v.split(" ");
       if (isNaN(Number(val))) return console.error("Value is not a number");
       dispatch(searchAttrValueComparison({ attr, val, op }));
       return;
     }
-    const attrRegex = /^[a-z0-9_]+?:/i;
+    const attrRegex = /^[A-Za-z0-9_]+?:/i;
     if (attrRegex.test(v)) {
       const [attr, val] = v.split(": ");
       dispatch(searchAttrValue({ attr, val }));
       return;
     }
-    dispatch(searchEntity(v));
+    const extendRegex = /^![A-Za-z0-9().?!/&-_ ]+?$/i;
+    dispatch(searchEntity({ regex: v, extended: !extendRegex.test(v) }));
   }
 
   return (
