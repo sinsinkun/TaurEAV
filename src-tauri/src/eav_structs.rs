@@ -2,14 +2,14 @@
 
 use chrono::{DateTime, Utc};
 
-#[derive(Debug, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
 pub struct EavEntityType {
   pub id: u32,
   pub created_at: DateTime<Utc>,
   pub entity_type: String,
 }
 
-#[derive(Debug, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
 pub struct EavEntity {
   pub id: u32,
   pub created_at: DateTime<Utc>,
@@ -17,7 +17,7 @@ pub struct EavEntity {
   pub entity_type_id: u32,
 }
 
-#[derive(Debug, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
 pub struct EavAttribute {
   pub id: u32,
   pub created_at: DateTime<Utc>,
@@ -27,7 +27,7 @@ pub struct EavAttribute {
   pub allow_multiple: Option<bool>,
 }
 
-#[derive(Debug, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
 pub struct EavValue {
   pub id: u32,
   pub created_at: DateTime<Utc>,
@@ -40,7 +40,7 @@ pub struct EavValue {
   pub value_bool: Option<bool>,
 }
 
-#[derive(Debug, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Default, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
 pub struct EavView {
   // entity related
   pub entity_type_id: Option<u32>,
@@ -60,4 +60,37 @@ pub struct EavView {
   pub value_float: Option<f32>,
   pub value_time: Option<DateTime<Utc>>,
   pub value_bool: Option<bool>,
+}
+
+impl EavView {
+  pub fn default() -> Self {
+    EavView {
+      entity_type_id: None,
+      entity_type: None,
+      entity_id: None,
+      entity: None,
+      attr_id: None,
+      attr: None,
+      value_type: None,
+      allow_multiple: None,
+      value_id: None,
+      created_at: None,
+      value_str: None,
+      value_int: None,
+      value_float: None,
+      value_time: None,
+      value_bool: None
+    }
+  }
+
+  pub fn from_attr(attr: EavAttribute) -> Self {
+    EavView { 
+      entity_type_id: Some(attr.entity_type_id),
+      attr_id: Some(attr.id),
+      attr: Some(attr.attr),
+      value_type: Some(attr.value_type),
+      allow_multiple: attr.allow_multiple,
+      ..Default::default()
+    }
+  }
 }

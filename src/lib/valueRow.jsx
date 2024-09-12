@@ -35,7 +35,6 @@ const ValueRow = ({ data }) => {
     }
     if (unit && data.value_type !== "str") data.value_str = unit;
     if (!data.value_id) dispatch(addValue(form));
-    else if (data.allow_multiple) dispatch(addValue(form));
     else dispatch(updateValue(form));
     // clean up
     setDValue(fvalue);
@@ -62,7 +61,7 @@ const ValueRow = ({ data }) => {
     switch (data.value_type) {
       case "str":
         if (data.value_str) {
-          if (!data.allow_multiple) setFValue(data.value_str);
+          setFValue(data.value_str);
           setDValue(data.value_str);
         } else {
           setDValue("-");
@@ -70,7 +69,7 @@ const ValueRow = ({ data }) => {
         break;
       case "int":
         if (data.value_int || data.value_int === 0) {
-          if (!data.allow_multiple) setFValue(data.value_int);
+          setFValue(data.value_int);
           setDValue(String(data.value_int));
           if (data.value_str) setUnit(data.value_str);
         } else {
@@ -79,7 +78,7 @@ const ValueRow = ({ data }) => {
         break;
       case "float":
         if (data.value_float || data.value_float === 0) {
-          if (!data.allow_multiple) setFValue(data.value_float);
+          setFValue(data.value_float.toFixed(2));
           setDValue(data.value_float.toFixed(2));
           if (data.value_str) setUnit(data.value_str);
         } else {
@@ -93,7 +92,7 @@ const ValueRow = ({ data }) => {
             converted.getUTCFullYear() + "-" + 
             (converted.getUTCMonth() + 1) + "-" + 
             converted.getUTCDate();
-          if (!data.allow_multiple) setFValue(formatted);
+          setFValue(formatted);
           setDValue(formatted);
         } else {
           setDValue("-");
@@ -101,10 +100,10 @@ const ValueRow = ({ data }) => {
         break;
       case "bool":
         if (data.value_bool === true) {
-          if (!data.allow_multiple) setFValue(true);
+          setFValue(true);
           setDValue("Yes");
         } else if (data.value_bool === false) {
-          if (!data.allow_multiple) setFValue(false);
+          setFValue(false);
           setDValue("No");
         } else {
           setDValue("-");
@@ -117,7 +116,7 @@ const ValueRow = ({ data }) => {
 
   return (
     <div className="grid" style={{ textAlign: "left" }}>
-      <div>{data.attr} {data.allow_multiple && "(+)"}</div>
+      <div>{data.attr} {!data.value_id && "(+)"}</div>
       {isEditing ? (
         <div className="value-field-container">
           {data.value_type === "str" && (
@@ -139,7 +138,7 @@ const ValueRow = ({ data }) => {
             <input type="text" placeholder="unit" name="unit" className="subfield" value={unit} onChange={handleInput} />
           )}
           <div style={{ flexGrow:1 }}></div>
-          <button onClick={submitValue}>{(data.value_id && !data.allow_multiple) ? "Update" : "Add"}</button>
+          <button onClick={submitValue}>{data.value_id ? "Update" : "Add"}</button>
           <button onClick={() => setIsEditing(false)}>Cancel</button>
           {showDelete && (
             <button onClick={() => confirmDeleteValue(data.value_id)} className="square">

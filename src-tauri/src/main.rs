@@ -55,15 +55,62 @@ async fn fetch_entities(state: State<'_, TState>, entity_type_id: u32) -> Result
 }
 
 #[tauri::command]
-async fn fetch_values(state: State<'_, TState>, entity_id: u32) -> Result<Vec<EavView>, String> {
+async fn fetch_attrs(
+    state: State<'_, TState>, entity_type_id: u32, multi_only: bool
+) -> Result<Vec<EavAttribute>, String> {
     let dbi = state.db.lock().await;
-    match dbi.fetch_views_by_entity_id(entity_id).await {
+    match dbi.fetch_attrs(entity_type_id, multi_only).await {
         Ok(v) => Ok(v),
         Err(e) => {
-            println!("Failed to fetch views: {:?}", e);
+            println!("Failed to fetch attributes: {:?}", e);
             Err(e.to_string())
         }
     }
+}
+
+#[tauri::command]
+async fn fetch_values(state: State<'_, TState>, entity_id: u32) -> Result<Vec<EavView>, String> {
+    let dbi = state.db.lock().await;
+    let mut views = match dbi.fetch_views_by_entity_id(entity_id).await {
+        Ok(v) => v,
+        Err(e) => {
+            println!("Failed to fetch views: {:?}", e);
+            return Err(e.to_string());
+        }
+    };
+    // append unfilled fields
+    let entity = match dbi.fetch_entity_by_id(entity_id).await {
+        Ok(v) => v,
+        Err(e) => {
+            println!("Failed to fetch entity: {:?}", e);
+            return Err(e.to_string());
+        }
+    };
+    let attrs = match dbi.fetch_attrs(entity.entity_type_id, false).await {
+        Ok(v) => v,
+        Err(e) => {
+            println!("Failed to fetch attrs: {:?}", e);
+            return Err(e.to_string());
+        }
+    };
+    for a in attrs {
+        let entry_exists = views.clone().into_iter().filter(|v| {
+            if v.attr_id == Some(a.id) {
+                return match v.allow_multiple {
+                    Some(b) => !b,
+                    None => false
+                }
+            }
+            false
+        }).count();
+        if entry_exists > 0 { continue; }
+        let mut v = EavView::from_attr(a);
+        // copy entity data from existing view
+        v.entity = Some(entity.entity.clone());
+        v.entity_id = Some(entity.id);
+        views.push(v);
+    }
+    Ok(views)
 }
 
 #[tauri::command(rename_all = "snake_case")]
@@ -252,7 +299,7 @@ fn main() {
     tauri::Builder::default()
         .manage(TState { db: Mutex::new(DBInterface::new()) })
         .invoke_handler(tauri::generate_handler![
-            connect, fetch_entity_types, fetch_entities, fetch_values,
+            connect, fetch_entity_types, fetch_entities, fetch_attrs, fetch_values,
             create_entity_type, create_entity, create_attr, create_value, update_value, 
             delete_entity_type, delete_entity, delete_attr, delete_value, 
             search_entity, search_entity_with_attr_value, search_entity_without_attr,

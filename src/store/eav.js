@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, current } from '@reduxjs/toolkit';
 import { invoke } from "@tauri-apps/api/tauri";
 
 export const connect = createAsyncThunk(
@@ -319,6 +319,7 @@ export const eavSlice = createSlice({
     }).addCase(fetchValues.fulfilled, (state, action) => {
       state.loading = false;
       state.values = action.payload;
+      console.log(state.values);
     }).addCase(fetchValues.rejected, (state) => {
       state.loading = false;
       state.values = [];
@@ -367,18 +368,20 @@ export const eavSlice = createSlice({
     }).addCase(addValue.fulfilled, (state, action) => {
       state.loading = false;
       // determine if adding new row or modifying existing row
-      let addNewRow = false;
+      let newRow = null;
       let idx = -1;
       state.values.forEach((v, i) => {
         if (v.attr_id === action.payload.attr_id && v.entity_id === action.payload.entity_id) {
-          if (!v.value_id) idx = i;
-          else if (v.value_id && v.allow_multiple) addNewRow = true; 
+          if (!v.value_id) {
+            idx = i;
+            if (v.allow_multiple) newRow = { ...v };
+          }
         }
       })
       // update existing state
-      if (addNewRow) {
-        state.values.push(action.payload);
-      } else if (idx > -1) {
+      console.log("new row", newRow);
+      if (newRow) state.values.push(newRow);
+      if (idx > -1) {
         state.values[idx].value_id = action.payload.id;
         state.values[idx].created_at = action.payload.created_at;
         state.values[idx].value_str = action.payload.value_str;
@@ -394,19 +397,12 @@ export const eavSlice = createSlice({
       state.loading = true;
     }).addCase(updateValue.fulfilled, (state, action) => {
       state.loading = false;
-      // determine if adding new row or modifying existing row
-      let addNewRow = false;
       let idx = -1;
       state.values.forEach((v, i) => {
-        if (v.attr_id === action.payload.attr_id && v.entity_id === action.payload.entity_id) {
-          if (v.allow_multiple) addNewRow = true;
-          else idx = i;
-        }
+        if (v.value_id === action.payload.id) idx = i;
       })
       // update existing state
-      if (addNewRow) {
-        state.values.push(action.payload);
-      } else if (idx > -1) {
+      if (idx > -1) {
         state.values[idx].value_str = action.payload.value_str;
         state.values[idx].value_int = action.payload.value_int;
         state.values[idx].value_float = action.payload.value_float;
@@ -446,9 +442,9 @@ export const eavSlice = createSlice({
       state.loading = false;
       let idx = -1;
       state.values.forEach((e, i) => {
-        if (e.id === action.payload) idx = i;
+        if (e.value_id === action.payload) idx = i;
       })
-      if (idx > -1) state.entities.splice(idx, 1);
+      if (idx > -1) state.values.splice(idx, 1);
     }).addCase(deleteValue.rejected, (state) => {
       state.loading = false;
     });

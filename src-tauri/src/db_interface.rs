@@ -245,6 +245,19 @@ impl DBInterface {
 	}
 
 	// -- ATTRIBUTES --
+	pub async fn fetch_attrs(&self, entity_type_id: u32, multi_only: bool) -> Result<Vec<EavAttribute>, sqlx::Error> {
+		let pool = self.get_pool()?;
+		let mut rows = sqlx::query_as::<_, EavAttribute>("SELECT * FROM eav_attrs WHERE entity_type_id = ?")
+			.bind(entity_type_id.to_string())
+			.fetch_all(pool)
+			.await?;
+		if multi_only {
+			rows = rows.into_iter().filter(|a| a.allow_multiple.unwrap_or(false)).collect();
+		}
+		println!("fetch_attrs: {}", rows.len());
+		Ok(rows)
+	}
+
 	pub async fn fetch_attr_by_id(&self, id: u32) -> Result<EavAttribute, sqlx::Error> {
 		let pool = self.get_pool()?;
 		let row = sqlx::query_as::<_, EavAttribute>("SELECT * FROM eav_attrs WHERE id = ?")
@@ -367,7 +380,7 @@ impl DBInterface {
 	// -- VIEWS --
 	pub async fn fetch_views_by_entity_id(&self, entity_id: u32) -> Result<Vec<EavView>, sqlx::Error> {
 		let pool = self.get_pool()?;
-		let rows = sqlx::query_as::<_, EavView>("SELECT * FROM all_possible_eav_data WHERE entity_id = ?")
+		let rows = sqlx::query_as::<_, EavView>("SELECT * FROM all_existing_eav_data WHERE entity_id = ?")
 			.bind(entity_id.to_string())
 			.fetch_all(pool)
 			.await?;

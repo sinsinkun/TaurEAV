@@ -9,7 +9,12 @@ const EntityData = () => {
   )
   return (
     <div className="value-container">
-      {valuesData.map(v => <ValueRow key={"value-" + v.attr_id + v.value_id} data={v} />)}
+      {valuesData.map((v, i) => {
+        let key = "value-" + v.attr_id + "-" + i + "-" + v.value_id;
+        return (
+          <ValueRow key={key} data={v} />
+        )
+      })}
     </div>
   )
 }
