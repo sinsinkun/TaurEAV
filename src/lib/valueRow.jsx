@@ -33,7 +33,7 @@ const ValueRow = ({ data }) => {
       default:
         break;
     }
-    if (unit && data.value_type !== "str") data.value_str = unit;
+    if (unit && data.value_type !== "str") form.value_str = unit;
     if (!data.value_id) dispatch(addValue(form));
     else dispatch(updateValue(form));
     // clean up

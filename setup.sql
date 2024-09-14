@@ -178,6 +178,42 @@ begin
 		end if;
 	end if;
 
+	-- insert value into value table
+	if v_type = 'str' then
+		if v1 is null then
+			signal sqlstate '45000'
+			set message_text = 'ERR: String value not provided';
+		end if;
+		insert into eav_values (entity_id, attr_id, value_str) values (entity_id, attr_id, v1);
+	elseif v_type = 'int' then
+		if v2 is null then
+			signal sqlstate '45000'
+			set message_text = 'ERR: int value not provided';
+		end if;
+		insert into eav_values (entity_id, attr_id, value_int) values (entity_id, attr_id, v2);
+	elseif v_type = 'float' then
+		if v3 is null then
+			signal sqlstate '45000'
+			set message_text = 'ERR: float value not provided';
+		end if;
+		insert into eav_values (entity_id, attr_id, value_float) values (entity_id, attr_id, v3);
+	elseif v_type = 'time' then
+		if v4 is null then
+			signal sqlstate '45000'
+			set message_text = 'ERR: time value not provided';
+		end if;
+		insert into eav_values (entity_id, attr_id, value_time) values (entity_id, attr_id, v4);
+	elseif v_type = 'bool' then
+		if v5 is null then
+			signal sqlstate '45000'
+			set message_text = 'ERR: bool value not provided';
+		end if;
+		insert into eav_values (entity_id, attr_id, value_bool) values (entity_id, attr_id, v5);
+	end if;
+end //
+DELIMITER ;
+
+
 -- helper for removing entities + all associated values
 DELIMITER //
 create procedure delete_eav_entity(entity_id int unsigned)
@@ -228,4 +264,4 @@ from eav_values ev
 left join eav_entities ee on ev.entity_id = ee.id
 left join eav_entity_types eet on eet.id = ee.entity_type_id
 left join eav_attrs ea on ea.id = ev.attr_id
-order by eet.id, ev.id;
+order by eet.id, ev.attr_id;

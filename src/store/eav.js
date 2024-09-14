@@ -319,7 +319,6 @@ export const eavSlice = createSlice({
     }).addCase(fetchValues.fulfilled, (state, action) => {
       state.loading = false;
       state.values = action.payload;
-      console.log(state.values);
     }).addCase(fetchValues.rejected, (state) => {
       state.loading = false;
       state.values = [];
@@ -379,8 +378,6 @@ export const eavSlice = createSlice({
         }
       })
       // update existing state
-      console.log("new row", newRow);
-      if (newRow) state.values.push(newRow);
       if (idx > -1) {
         state.values[idx].value_id = action.payload.id;
         state.values[idx].created_at = action.payload.created_at;
@@ -389,6 +386,7 @@ export const eavSlice = createSlice({
         state.values[idx].value_float = action.payload.value_float;
         state.values[idx].value_time = action.payload.value_time;
         state.values[idx].value_bool = action.payload.value_bool;
+        if (newRow) state.values.splice(idx+1, 0, newRow);
       }
     }).addCase(addValue.rejected, (state) => {
       state.loading = false;
