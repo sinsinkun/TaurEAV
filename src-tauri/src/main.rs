@@ -43,9 +43,10 @@ async fn fetch_entity_types(state: State<'_, TState>) -> Result<Vec<EavEntityTyp
 }
 
 #[tauri::command]
-async fn fetch_entities(state: State<'_, TState>, entity_type_id: u32) -> Result<Vec<EavEntity>, String> {
+async fn fetch_entities(state: State<'_, TState>, entity_type_id: u32, page: Option<u32>) -> Result<Vec<EavEntity>, String> {
     let dbi = state.db.lock().await;
-    match dbi.fetch_entities(entity_type_id).await {
+    let pg = page.unwrap_or(1);
+    match dbi.fetch_entities(entity_type_id, pg).await {
         Ok(v) => Ok(v),
         Err(e) => {
             println!("Failed to fetch entities: {:?}", e);
@@ -69,9 +70,10 @@ async fn fetch_attrs(
 }
 
 #[tauri::command]
-async fn fetch_values(state: State<'_, TState>, entity_id: u32) -> Result<Vec<EavView>, String> {
+async fn fetch_values(state: State<'_, TState>, entity_id: u32, page: Option<u32>) -> Result<Vec<EavView>, String> {
     let dbi = state.db.lock().await;
-    let mut views = match dbi.fetch_views_by_entity_id(entity_id).await {
+    let pg = page.unwrap_or(1);
+    let mut views = match dbi.fetch_views_by_entity_id(entity_id, pg).await {
         Ok(v) => v,
         Err(e) => {
             println!("Failed to fetch views: {:?}", e);
@@ -224,10 +226,11 @@ async fn delete_value(state: State<'_, TState>, id: u32) -> Result<String, Strin
 }
 
 #[tauri::command]
-async fn search_entity(state: State<'_, TState>, regex: String, extended: bool) -> Result<Vec<EavEntity>, String> {
+async fn search_entity(state: State<'_, TState>, regex: String, extended: bool, page: Option<u32>) -> Result<Vec<EavEntity>, String> {
     let dbi = state.db.lock().await;
+    let pg = page.unwrap_or(1);
     if extended {
-        return match dbi.search_entity_with_alt_title(regex).await {
+        return match dbi.search_entity_with_alt_title(regex, pg).await {
             Ok(v) => Ok(v),
             Err(e) => {
                 println!("Failed to fetch entities: {:?}", e);
@@ -235,7 +238,7 @@ async fn search_entity(state: State<'_, TState>, regex: String, extended: bool) 
             }
         }
     }
-    match dbi.search_entity(regex).await {
+    match dbi.search_entity(regex, pg).await {
         Ok(v) => Ok(v),
         Err(e) => {
             println!("Failed to fetch entities: {:?}", e);
@@ -246,10 +249,11 @@ async fn search_entity(state: State<'_, TState>, regex: String, extended: bool) 
 
 #[tauri::command]
 async fn search_entity_with_attr_value(
-    state: State<'_, TState>, attr: String, val: String
+    state: State<'_, TState>, attr: String, val: String, page: Option<u32>
 ) -> Result<Vec<EavEntity>, String> {
     let dbi = state.db.lock().await;
-    match dbi.search_entity_with_attr_value(attr, val).await {
+    let pg = page.unwrap_or(1);
+    match dbi.search_entity_with_attr_value(attr, val, pg).await {
         Ok(v) => Ok(v),
         Err(e) => {
             println!("Failed to fetch entities: {:?}", e);
@@ -259,9 +263,10 @@ async fn search_entity_with_attr_value(
 }
 
 #[tauri::command]
-async fn search_entity_without_attr(state: State<'_, TState>, attr: String) -> Result<Vec<EavEntity>, String> {
+async fn search_entity_without_attr(state: State<'_, TState>, attr: String, page: Option<u32>) -> Result<Vec<EavEntity>, String> {
     let dbi = state.db.lock().await;
-    match dbi.search_entity_without_attr(attr).await {
+    let pg = page.unwrap_or(1);
+    match dbi.search_entity_without_attr(attr, pg).await {
         Ok(v) => Ok(v),
         Err(e) => {
             println!("Failed to fetch entities: {:?}", e);
@@ -272,9 +277,10 @@ async fn search_entity_without_attr(state: State<'_, TState>, attr: String) -> R
 
 #[tauri::command]
 async fn search_entity_with_attr_value_comparison(
-    state: State<'_, TState>, attr: String, val: String, op: String
+    state: State<'_, TState>, attr: String, val: String, op: String, page: Option<u32>
 ) -> Result<Vec<EavEntity>, String> {
     let dbi = state.db.lock().await;
+    let pg = page.unwrap_or(1);
     let optr: Operator = match op.as_str() {
         ">" => Operator::GREATER,
         "<" => Operator::LESSER,
@@ -282,7 +288,7 @@ async fn search_entity_with_attr_value_comparison(
             return Err("ERR: OperatorNotValid".to_owned());
         }
     };
-    match dbi.search_entity_with_attr_value_comparison(attr, val, optr).await {
+    match dbi.search_entity_with_attr_value_comparison(attr, val, optr, pg).await {
         Ok(v) => Ok(v),
         Err(e) => {
             println!("Failed to fetch entities: {:?}", e);

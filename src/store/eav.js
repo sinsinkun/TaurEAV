@@ -245,6 +245,10 @@ export const eavSlice = createSlice({
     activeEntity: null,
     showDelete: false,
     showHelp: false,
+    meta: {
+      callback: "",
+      page: 1,
+    }
   },
   reducers: {
     clearEntityTypes: (state) => {
@@ -282,7 +286,12 @@ export const eavSlice = createSlice({
     },
     toggleShowHelp: (state) => {
       state.showHelp = !state.showHelp;
-    }
+    },
+    setMeta: (state, action) => {
+      if (typeof action.payload !== 'object') throw Error("Invalid payload to setMeta");
+      state.meta.callback = action.payload.callback;
+      state.meta.page = action.payload.page;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(connect.pending, (state) => {
@@ -493,6 +502,7 @@ export const {
   setActiveEntity,
   toggleShowDel,
   toggleShowHelp,
+  setMeta,
 } = eavSlice.actions;
 
 export default eavSlice.reducer;

@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use chrono::{DateTime, Utc};
 use dotenvy::dotenv;
-use sqlx::{mysql::MySqlPoolOptions, Pool, MySql};
+use sqlx::{mysql::MySqlPoolOptions, MySql, Pool};
 
 use crate::eav_structs::{ EavAttribute, EavEntityType, EavEntity, EavValue, EavView };
 
@@ -70,6 +70,18 @@ impl DBInterface {
 		Ok(id.0)
 	}
 
+	fn page_to_limit(&self, page: u32, per_page: Option<u32>) -> String {
+		let limit = match per_page {
+			Some(x) => x,
+			None => 100
+		};
+		let skip = match page {
+			0 => 0, // handle page 0 exception
+			_ => (page - 1) * limit
+		};
+		" LIMIT ".to_owned() + &skip.to_string() + " , " + &limit.to_string()
+	}
+
 	// -- ENTITY TYPES --
 	pub async fn fetch_entity_types(&self) -> Result<Vec<EavEntityType>, sqlx::Error> {
 		let pool = self.get_pool()?;
@@ -96,7 +108,7 @@ impl DBInterface {
 	pub async fn delete_entity_type(&self, id: u32) -> Result<String, sqlx::Error> {
 		let pool = self.get_pool()?;
 		// fetch entities for entity type
-		let entities: Vec<EavEntity> = self.fetch_entities(id).await?;
+		let entities: Vec<EavEntity> = self.fetch_entities(id, 0).await?;
 		// delete entities + values of entity type
 		for e in entities { self.delete_entity(e.id).await?; }
 		// delete attributes for entity type
@@ -110,9 +122,10 @@ impl DBInterface {
 	}
 
 	// -- ENTITIES --
-	pub async fn fetch_entities(&self, entity_type_id: u32) -> Result<Vec<EavEntity>, sqlx::Error> {
+	pub async fn fetch_entities(&self, entity_type_id: u32, page: u32) -> Result<Vec<EavEntity>, sqlx::Error> {
 		let pool = self.get_pool()?;
-		let rows = sqlx::query_as::<_, EavEntity>("SELECT * FROM eav_entities WHERE entity_type_id = ?")
+		let query = "SELECT * FROM eav_entities WHERE entity_type_id = ?".to_owned() + &self.page_to_limit(page, None);
+		let rows = sqlx::query_as::<_, EavEntity>(&query)
 			.bind(entity_type_id.to_string())
 			.fetch_all(pool)
 			.await?;
@@ -153,9 +166,10 @@ impl DBInterface {
 		Ok("OK".to_owned())
 	}
 
-	pub async fn search_entity(&self, regex: String) -> Result<Vec<EavEntity>, sqlx::Error> {
+	pub async fn search_entity(&self, regex: String, page: u32) -> Result<Vec<EavEntity>, sqlx::Error> {
 		let pool = self.get_pool()?;
-		let rows = sqlx::query_as::<_, EavEntity>("SELECT * FROM eav_entities WHERE entity REGEXP ?")
+		let query = "SELECT * FROM eav_entities WHERE entity REGEXP ?".to_owned() + &self.page_to_limit(page, None);
+		let rows = sqlx::query_as::<_, EavEntity>(&query)
 			.bind(&regex)
 			.fetch_all(pool)
 			.await?;
@@ -163,55 +177,46 @@ impl DBInterface {
 		Ok(rows)
 	}
 
-	pub async fn search_entity_with_alt_title(&self, regex: String) -> Result<Vec<EavEntity>, sqlx::Error> {
+	pub async fn search_entity_with_alt_title(&self, regex: String, page: u32) -> Result<Vec<EavEntity>, sqlx::Error> {
 		let pool = self.get_pool()?;
-		// get alt_title attr ids
-		let query1 = 
-			"SELECT * FROM eav_values WHERE attr_id IN (".to_owned() +
-			"SELECT id FROM eav_attrs WHERE attr = ?" +
-			") AND value_str REGEXP ?";
-		let vals = sqlx::query_as::<_, EavValue>(&query1).bind("alt_title").bind(&regex).fetch_all(pool).await?;
-		let mut query2 = String::new();
-		if vals.len() > 0 {
-			let mut ent_ids = String::new();
-			for v in vals {
-				ent_ids = ent_ids + &v.entity_id.to_string() + ",";
-			}
-			ent_ids.pop();
-			query2 = "SELECT * FROM eav_entities WHERE id IN (".to_owned() + 
-				&ent_ids + ") OR entity REGEXP ?";
-		} else {
-			query2 = "SELECT * FROM eav_entities WHERE entity REGEXP ?".to_owned();
-		}
-		let rows = sqlx::query_as::<_, EavEntity>(&query2).bind(&regex).fetch_all(pool).await?;
+		let query = "SELECT ee.* from eav_entities ee ".to_owned() +
+			"LEFT JOIN eav_attrs ea ON (ee.entity_type_id = ea.entity_type_id AND ea.attr = ?) " +
+			"LEFT JOIN eav_values ev ON (ev.entity_id = ee.id AND ev.attr_id = ea.id) " +
+			"WHERE ee.entity REGEXP ? OR ev.value_str REGEXP ?" +
+			&self.page_to_limit(page, None);
+		let rows = sqlx::query_as::<_, EavEntity>(&query)
+			.bind("alt_title").bind(&regex).bind(&regex)
+			.fetch_all(pool).await?;
 		println!("search_entity_with_alt_title: {} results", rows.len());
 		Ok(rows)
 	}
 
-	pub async fn search_entity_with_attr(&self, attr: String) -> Result<Vec<EavEntity>, sqlx::Error> {
+	pub async fn search_entity_with_attr(&self, attr: String, page: u32) -> Result<Vec<EavEntity>, sqlx::Error> {
 		let pool = self.get_pool()?;
 		let query = "SELECT e.* FROM eav_entities e ".to_owned() +
 			"LEFT JOIN eav_values v ON e.id = v.entity_id AND v.attr_id IN " +
 			"(SELECT id FROM eav_attrs WHERE attr = ?) " +
-			"WHERE v.attr_id IS NOT NULL";
+			"WHERE v.attr_id IS NOT NULL" +
+			&self.page_to_limit(page, None);
 		let rows = sqlx::query_as::<_, EavEntity>(&query).bind(attr).fetch_all(pool).await?;
 		println!("search_entity_with_attr: {} results", rows.len());
 		Ok(rows)
 	}
 
-	pub async fn search_entity_without_attr(&self, attr: String) -> Result<Vec<EavEntity>, sqlx::Error> {
+	pub async fn search_entity_without_attr(&self, attr: String, page: u32) -> Result<Vec<EavEntity>, sqlx::Error> {
 		let pool = self.get_pool()?;
 		let query = "SELECT e.* FROM eav_entities e ".to_owned() +
 			"LEFT JOIN eav_values v ON e.id = v.entity_id AND v.attr_id IN " +
 			"(SELECT id FROM eav_attrs WHERE attr = ?) " +
-			"WHERE v.attr_id IS NULL";
+			"WHERE v.attr_id IS NULL" +
+			&self.page_to_limit(page, None);
 		let rows = sqlx::query_as::<_, EavEntity>(&query).bind(attr).fetch_all(pool).await?;
 		println!("search_entity_without_attr: {} results", rows.len());
 		Ok(rows)
 	}
 
-	pub async fn search_entity_with_attr_value(&self, attr: String, val: String) -> Result<Vec<EavEntity>, sqlx::Error> {
-		let views = self.fetch_views_by_attr_value(attr, val).await?;
+	pub async fn search_entity_with_attr_value(&self, attr: String, val: String, page: u32) -> Result<Vec<EavEntity>, sqlx::Error> {
+		let views = self.fetch_views_by_attr_value(attr, val, page).await?;
 		let pool = self.get_pool()?;
 		let mut ent_ids = String::new();
 		for v in views {
@@ -227,9 +232,9 @@ impl DBInterface {
 	}
 
 	pub async fn search_entity_with_attr_value_comparison(
-		&self, attr: String, val: String, operator: Operator
+		&self, attr: String, val: String, operator: Operator, page: u32
 	) -> Result<Vec<EavEntity>, sqlx::Error> {
-		let views = self.fetch_views_by_attr_value_comparison(attr, val, operator).await?;
+		let views = self.fetch_views_by_attr_value_comparison(attr, val, operator, page).await?;
 		let pool = self.get_pool()?;
 		let mut ent_ids = String::new();
 		for v in views {
@@ -378,9 +383,10 @@ impl DBInterface {
 	}
 
 	// -- VIEWS --
-	pub async fn fetch_views_by_entity_id(&self, entity_id: u32) -> Result<Vec<EavView>, sqlx::Error> {
+	pub async fn fetch_views_by_entity_id(&self, entity_id: u32, page: u32) -> Result<Vec<EavView>, sqlx::Error> {
 		let pool = self.get_pool()?;
-		let rows = sqlx::query_as::<_, EavView>("SELECT * FROM all_existing_eav_data WHERE entity_id = ?")
+		let query = "SELECT * FROM all_existing_eav_data WHERE entity_id = ?".to_owned() + &self.page_to_limit(page, None);
+		let rows = sqlx::query_as::<_, EavView>(&query)
 			.bind(entity_id.to_string())
 			.fetch_all(pool)
 			.await?;
@@ -388,7 +394,7 @@ impl DBInterface {
 		Ok(rows)
 	}
 
-	pub async fn fetch_views_by_attr_value(&self, attr: String, val: String) -> Result<Vec<EavView>, sqlx::Error> {
+	pub async fn fetch_views_by_attr_value(&self, attr: String, val: String, page: u32) -> Result<Vec<EavView>, sqlx::Error> {
 		let pool = self.get_pool()?;
 		let float_val = "^".to_owned() + &val + "[.]?";
 		let bool_val = match val.as_str() {
@@ -398,7 +404,8 @@ impl DBInterface {
 		// note: time is excluded as datetime requires special formatting
 		// note: bool == null cannot be searched
 		let query = "SELECT * FROM all_existing_eav_data WHERE attr = ? AND (".to_owned() +
-			"value_str REGEXP ? OR value_int = ? OR value_float REGEXP ? OR value_bool = ?)";
+			"value_str REGEXP ? OR value_int = ? OR value_float REGEXP ? OR value_bool = ?)" +
+			&self.page_to_limit(page, None);
 		let rows = sqlx::query_as::<_, EavView>(&query)
 			.bind(&attr).bind(&val).bind(&val).bind(&float_val).bind(&bool_val)
 			.fetch_all(pool)
@@ -408,7 +415,7 @@ impl DBInterface {
 	}
 
 	pub async fn fetch_views_by_attr_value_comparison(
-		&self, attr: String, val: String, operator: Operator
+		&self, attr: String, val: String, operator: Operator, page: u32
 	) -> Result<Vec<EavView>, sqlx::Error> {
 		let pool = self.get_pool()?;
 		// only handling int/float values
@@ -417,7 +424,7 @@ impl DBInterface {
 			Operator::LESSER => " < "
 		};
 		let query = "SELECT * FROM all_existing_eav_data WHERE attr = ? AND (".to_owned() +
-			"value_int" + op + "? OR value_float" + op + "?)";
+			"value_int" + op + "? OR value_float" + op + "?)" + &self.page_to_limit(page, None);
 		let rows = sqlx::query_as::<_, EavView>(&query)
 			.bind(&attr).bind(&val).bind(&val)
 			.fetch_all(pool)
