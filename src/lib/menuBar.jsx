@@ -49,7 +49,7 @@ function MenuBar() {
   return (
     <nav>
       <button onClick={() => openSubmenu("file")}>File</button>
-      {!!activeTab.id && (
+      {!!activeTab?.id && (
         <button onClick={() => openSubmenu("edit")}>
           Edit {">"} {activeTab.entity_type}
         </button>
