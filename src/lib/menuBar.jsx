@@ -7,16 +7,26 @@ function MenuBar() {
   const dispatch = useDispatch();
   const connected = useSelector((state) => state.eav.connected);
   const showDelete = useSelector((state) => state.eav.showDelete);
+  const activeTab = useSelector((state) => state.eav.activeEnType);
   const [openFile, setOpenFile] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
 
   function closeOnClick(e) {
     if (e.target) e.target?.click();
     setOpenFile(false);
+    setOpenEdit(false);
     window.removeEventListener("mouseup", closeOnClick);
   }
 
-  function openSubmenu() {
-    setOpenFile(true);
+  function openSubmenu(type) {
+    switch (type) {
+      case "file": setOpenFile(true);
+        break;
+      case "edit": setOpenEdit(true);
+        break;
+      default:
+        return;
+    }
     window.addEventListener("mouseup", closeOnClick);
   }
 
@@ -38,16 +48,26 @@ function MenuBar() {
 
   return (
     <nav>
-      <button onClick={openSubmenu}>File</button>
+      <button onClick={() => openSubmenu("file")}>File</button>
+      {!!activeTab.id && (
+        <button onClick={() => openSubmenu("edit")}>
+          Edit {">"} {activeTab.entity_type}
+        </button>
+      )}
       {openFile && (
         <div className="submenu">
           <button onClick={reconnect}>Reconnect</button>
           <button onClick={newEntityMenu}>New Category</button>
-          {/* <button onClick={todo}>Delete Category</button> */}
           <button onClick={toggleDeletion}>
             {showDelete ? "Disable Deletion" : "Enable Deletion"}
           </button>
           <button onClick={toggleHelp}>Help</button>
+        </div>
+      )}
+      {openEdit && (
+        <div className="submenu" style={{left: "45px" }}>
+          <button onClick={() => dispatch(openForm("attr"))}> + Attribute</button>
+          <button onClick={() => dispatch(openForm("entity"))}> + Entity</button>
         </div>
       )}
     </nav>
