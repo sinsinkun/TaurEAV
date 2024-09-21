@@ -1,7 +1,16 @@
+import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import store from "../store";
 import EntityData from "./entityData";
-import { fetchValues, openForm, setActiveEntity, setFormInput } from "../store/eav";
+import {
+  fetchEntities,
+  fetchValues,
+  fnsWithPaginationEnum,
+  openForm,
+  setActiveEntity,
+  setFormInput,
+} from "../store/eav";
 
 const EntityContainer = () => {
   const dispatch = useDispatch();
@@ -10,6 +19,7 @@ const EntityContainer = () => {
   const activeTab = useSelector((state) => state.eav.activeEnType);
   const activeEntity = useSelector((state) => state.eav.activeEntity);
   const showDelete = useSelector((state) => state.eav.showDelete);
+  const scrollRef = useRef(null);
 
   function fetchData(id) {
     if (activeEntity?.id === id) {
@@ -45,8 +55,35 @@ const EntityContainer = () => {
     return "(" + type.entity_type + ")";
   }
 
+  function onScroll(e) {
+    const dist = e.target.scrollTop;
+    const fullH = e.target.scrollHeight - e.target.clientHeight;
+    const entityMeta = store.getState().eav.entityMeta;
+    if (entityMeta.end) return;
+    if (fullH > 50 && fullH - dist < 10) {
+      switch (entityMeta.fn) {
+        case fnsWithPaginationEnum.fetchEntities:
+          console.log("fetch entities");
+          dispatch(fetchEntities({ id: entityMeta.id, page: entityMeta.page + 1 }));
+          break;
+        default:
+          console.log("No fn found in meta", entityMeta, activeTab);
+          return;
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    scrollRef.current?.addEventListener("scroll", onScroll);
+    return () => {
+      if (scrollRef.current)
+        scrollRef.current?.removeEventListener("scroll", onScroll);
+    }
+  }, [])
+
   return (
-    <div className="entry-container">
+    <div className="entry-container" ref={scrollRef}>
       <div className="btn-ctn">
         <button onClick={() => dispatch(openForm("entity"))}>+ entity</button>
         <button onClick={() => dispatch(openForm("attr"))}>+ attribute</button>

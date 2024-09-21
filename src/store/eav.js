@@ -1,5 +1,14 @@
-import { createAsyncThunk, createSlice, current } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { invoke } from "@tauri-apps/api/tauri";
+
+export const fnsWithPaginationEnum = {
+  none: null,
+  fetchEntities: "fetchEntities",
+  searchEntity: "searchEntity",
+  searchAttrValue: "searchAttrValue",
+  searchAttrValueComparison: "searchAttrValueComparison",
+  fetchValues: "fetchValues", // not an entity fetch
+}
 
 export const connect = createAsyncThunk(
   'eav/connect',
@@ -30,13 +39,19 @@ export const fetchEntityTypes = createAsyncThunk(
 
 export const fetchEntities = createAsyncThunk(
   'eav/fetchEntities',
-  async (typeId, { rejectWithValue }) => {
+  async ({ id, page }, { rejectWithValue }) => {
     try {
-      const res = await invoke("fetch_entities", { entityTypeId: typeId });
+      const res = await invoke("fetch_entities", { entityTypeId: id, page });
       return res;
     } catch (e) {
       console.error("API failed -", e);
       return rejectWithValue(null);
+    }
+  },
+  {
+    condition: (_, { getState }) => {
+      const loading = getState()?.eav?.loading ?? true;
+      if (loading) return false;
     }
   }
 )
@@ -50,6 +65,12 @@ export const fetchValues = createAsyncThunk(
     } catch (e) {
       console.error("API failed -", e);
       return rejectWithValue(null);
+    }
+  },
+  {
+    condition: (_, { getState }) => {
+      const loading = getState()?.eav?.loading ?? true;
+      if (loading) return false;
     }
   }
 )
@@ -186,27 +207,33 @@ export const deleteValue = createAsyncThunk(
 
 export const searchEntity = createAsyncThunk(
   'eav/searchEntity',
-  async ({ regex, extended }, { rejectWithValue }) => {
+  async ({ regex, extended, page }, { rejectWithValue }) => {
     try {
       if (!regex) return [];
-      const res = await invoke("search_entity", { regex, extended });
+      const res = await invoke("search_entity", { regex, extended, page });
       return res;
     } catch (e) {
       console.error("API failed -", e);
       return rejectWithValue(null);
+    }
+  },
+  {
+    condition: (_, { getState }) => {
+      const loading = getState()?.eav?.loading ?? true;
+      if (loading) return false;
     }
   }
 )
 
 export const searchAttrValue = createAsyncThunk(
   'eav/searchAttrValue',
-  async ({ attr, val }, { rejectWithValue }) => {
+  async ({ attr, val, page }, { rejectWithValue }) => {
     try {
       if (!attr || !val) return [];
-      let res = await invoke("search_entity_with_attr_value", { attr, val });
+      let res = await invoke("search_entity_with_attr_value", { attr, val, page });
       if (["FALSE", "False", "false", "No", "no", "n", "NULL", "null"].includes(val)) {
         // also search for null values
-        const append = await invoke("search_entity_without_attr", { attr });
+        const append = await invoke("search_entity_without_attr", { attr, page });
         res = [...res, ...append];
       }
       return res;
@@ -214,19 +241,31 @@ export const searchAttrValue = createAsyncThunk(
       console.error("API failed -", e);
       return rejectWithValue(null);
     }
+  },
+  {
+    condition: (_, { getState }) => {
+      const loading = getState()?.eav?.loading ?? true;
+      if (loading) return false;
+    }
   }
 )
 
 export const searchAttrValueComparison = createAsyncThunk(
   'eav/searchAttrValueComparison',
-  async ({ attr, val, op }, { rejectWithValue }) => {
+  async ({ attr, val, op, page }, { rejectWithValue }) => {
     try {
       if (!attr || !val || !op) return [];
-      let res = await invoke("search_entity_with_attr_value_comparison", { attr, val, op });
+      let res = await invoke("search_entity_with_attr_value_comparison", { attr, val, op, page });
       return res;
     } catch (e) {
       console.error("API failed -", e);
       return rejectWithValue(null);
+    }
+  },
+  {
+    condition: (_, { getState }) => {
+      const loading = getState()?.eav?.loading ?? true;
+      if (loading) return false;
     }
   }
 )
@@ -245,8 +284,8 @@ export const eavSlice = createSlice({
     activeEntity: null,
     showDelete: false,
     showHelp: false,
-    meta: {
-      callback: "",
+    entityMeta: {
+      fn: fnsWithPaginationEnum.none,
       page: 1,
     }
   },
@@ -287,11 +326,6 @@ export const eavSlice = createSlice({
     toggleShowHelp: (state) => {
       state.showHelp = !state.showHelp;
     },
-    setMeta: (state, action) => {
-      if (typeof action.payload !== 'object') throw Error("Invalid payload to setMeta");
-      state.meta.callback = action.payload.callback;
-      state.meta.page = action.payload.page;
-    },
   },
   extraReducers: (builder) => {
     builder.addCase(connect.pending, (state) => {
@@ -317,7 +351,14 @@ export const eavSlice = createSlice({
       state.loading = true;
     }).addCase(fetchEntities.fulfilled, (state, action) => {
       state.loading = false;
-      state.entities = action.payload;
+      state.entityMeta = {
+        fn: fnsWithPaginationEnum.fetchEntities,
+        id: action.meta.arg?.id,
+        page: action.meta.arg?.page || 1,
+      }
+      if (action.payload.length < 1) state.entityMeta.end = true;
+      if (action.meta.arg?.page > 1) state.entities = [...state.entities, ...action.payload];
+      else state.entities = action.payload;
       state.activeEntity = null;
     }).addCase(fetchEntities.rejected, (state) => {
       state.loading = false;
@@ -502,7 +543,6 @@ export const {
   setActiveEntity,
   toggleShowDel,
   toggleShowHelp,
-  setMeta,
 } = eavSlice.actions;
 
 export default eavSlice.reducer;

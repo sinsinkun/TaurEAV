@@ -21,7 +21,7 @@ const EntityTypeTabs = () => {
 
   function loadEntities(id) {
     dispatch(clearValues());
-    dispatch(fetchEntities(id));
+    dispatch(fetchEntities({ id }));
     dispatch(setActiveEnType(id));
   }
 
