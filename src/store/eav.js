@@ -364,7 +364,7 @@ export const eavSlice = createSlice({
         id: action.meta.arg?.id,
         page: action.meta.arg?.page || 1,
       }
-      if (action.payload.length < 1) state.entityMeta.end = true;
+      if (action.payload.length < 100) state.entityMeta.end = true;
       // update entities data
       if (action.meta.arg?.page > 1) state.entities = [...state.entities, ...action.payload];
       else state.entities = action.payload;
@@ -517,7 +517,7 @@ export const eavSlice = createSlice({
         extended: action.meta.arg?.extended,
         page: action.meta.arg?.page || 1,
       }
-      if (action.payload.length < 1) state.entityMeta.end = true;
+      if (action.payload.length < 100) state.entityMeta.end = true;
       // update entities data
       if (action.meta.arg?.page > 1) state.entities = [...state.entities, ...action.payload];
       else state.entities = action.payload;
@@ -538,7 +538,7 @@ export const eavSlice = createSlice({
         val: action.meta.arg?.val, 
         page: action.meta.arg?.page || 1,
       }
-      if (action.payload.length < 1) state.entityMeta.end = true;
+      if (action.payload.length < 100) state.entityMeta.end = true;
       // update entities data
       if (action.meta.arg?.page > 1) state.entities = [...state.entities, ...action.payload];
       else state.entities = action.payload;
@@ -560,7 +560,7 @@ export const eavSlice = createSlice({
         op: action.meta.arg?.op,
         page: action.meta.arg?.page || 1,
       }
-      if (action.payload.length < 1) state.entityMeta.end = true;
+      if (action.payload.length < 100) state.entityMeta.end = true;
       // update entities data
       if (action.meta.arg?.page > 1) state.entities = [...state.entities, ...action.payload];
       else state.entities = action.payload;
