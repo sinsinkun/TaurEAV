@@ -9,6 +9,7 @@ import {
   setActiveEnType,
   setFormInput,
   openForm,
+  scrollToTop,
 } from "../store/eav";
 
 const EntityTypeTabs = () => {
@@ -21,6 +22,7 @@ const EntityTypeTabs = () => {
 
   function loadEntities(id) {
     dispatch(clearValues());
+    dispatch(scrollToTop());
     dispatch(fetchEntities({ id }));
     dispatch(setActiveEnType(id));
   }

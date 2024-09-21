@@ -8,6 +8,10 @@ import {
   fetchValues,
   fnsWithPaginationEnum,
   openForm,
+  resetScrollToTop,
+  searchAttrValue,
+  searchAttrValueComparison,
+  searchEntity,
   setActiveEntity,
   setFormInput,
 } from "../store/eav";
@@ -19,6 +23,7 @@ const EntityContainer = () => {
   const activeTab = useSelector((state) => state.eav.activeEnType);
   const activeEntity = useSelector((state) => state.eav.activeEntity);
   const showDelete = useSelector((state) => state.eav.showDelete);
+  const resetScroll = useSelector((state) => state.eav.resetScroll);
   const scrollRef = useRef(null);
 
   function fetchData(id) {
@@ -55,22 +60,32 @@ const EntityContainer = () => {
     return "(" + type.entity_type + ")";
   }
 
+  function fetchNextPage() {
+    const meta = store.getState()?.eav?.entityMeta;
+    if (!meta || meta.end) return;
+    switch (meta.fn) {
+      case fnsWithPaginationEnum.fetchEntities:
+        dispatch(fetchEntities({ id: meta.id, page: meta.page + 1 }));
+        break;
+      case fnsWithPaginationEnum.searchEntity:
+        dispatch(searchEntity({ regex: meta.regex, extended: meta.extended, page: meta.page + 1 }));
+        break;
+      case fnsWithPaginationEnum.searchAttrValue:
+        dispatch(searchAttrValue({ attr: meta.attr, val: meta.val, page: meta.page + 1 }));
+        break;
+      case fnsWithPaginationEnum.searchAttrValueComparison:
+        dispatch(searchAttrValueComparison({ attr: meta.attr, val: meta.val, op: meta.op, page: meta.page + 1 }));
+        break;
+      default:
+        console.log("No fn found in meta", meta);
+        return;
+    }
+  }
+
   function onScroll(e) {
     const dist = e.target.scrollTop;
     const fullH = e.target.scrollHeight - e.target.clientHeight;
-    const entityMeta = store.getState().eav.entityMeta;
-    if (entityMeta.end) return;
-    if (fullH > 50 && fullH - dist < 10) {
-      switch (entityMeta.fn) {
-        case fnsWithPaginationEnum.fetchEntities:
-          console.log("fetch entities");
-          dispatch(fetchEntities({ id: entityMeta.id, page: entityMeta.page + 1 }));
-          break;
-        default:
-          console.log("No fn found in meta", entityMeta, activeTab);
-          return;
-      }
-    }
+    if (fullH > 50 && fullH - dist < 10) fetchNextPage();
   }
 
   useEffect(() => {
@@ -81,6 +96,16 @@ const EntityContainer = () => {
         scrollRef.current?.removeEventListener("scroll", onScroll);
     }
   }, [])
+
+  useEffect(() => {
+    console.log("reset scroll", resetScroll);
+    if (resetScroll) {
+      const target = scrollRef.current;
+      console.log(target);
+      if (target) target.scroll({ top: 0, behaviour: "smooth" });
+      dispatch(resetScrollToTop());
+    }
+  }, [resetScroll])
 
   return (
     <div className="entry-container" ref={scrollRef}>

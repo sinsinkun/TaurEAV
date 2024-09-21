@@ -284,6 +284,7 @@ export const eavSlice = createSlice({
     activeEntity: null,
     showDelete: false,
     showHelp: false,
+    resetScroll: false,
     entityMeta: {
       fn: fnsWithPaginationEnum.none,
       page: 1,
@@ -326,6 +327,12 @@ export const eavSlice = createSlice({
     toggleShowHelp: (state) => {
       state.showHelp = !state.showHelp;
     },
+    scrollToTop: (state) => {
+      state.resetScroll = true;
+    },
+    resetScrollToTop: (state) => {
+      state.resetScroll = false;
+    }
   },
   extraReducers: (builder) => {
     builder.addCase(connect.pending, (state) => {
@@ -351,12 +358,14 @@ export const eavSlice = createSlice({
       state.loading = true;
     }).addCase(fetchEntities.fulfilled, (state, action) => {
       state.loading = false;
+      // update meta data
       state.entityMeta = {
         fn: fnsWithPaginationEnum.fetchEntities,
         id: action.meta.arg?.id,
         page: action.meta.arg?.page || 1,
       }
       if (action.payload.length < 1) state.entityMeta.end = true;
+      // update entities data
       if (action.meta.arg?.page > 1) state.entities = [...state.entities, ...action.payload];
       else state.entities = action.payload;
       state.activeEntity = null;
@@ -501,7 +510,17 @@ export const eavSlice = createSlice({
       state.activeEnType = null;
     }).addCase(searchEntity.fulfilled, (state, action) => {
       state.loading = false;
-      state.entities = action.payload;
+      // update meta data
+      state.entityMeta = {
+        fn: fnsWithPaginationEnum.searchEntity,
+        regex: action.meta.arg?.regex,
+        extended: action.meta.arg?.extended,
+        page: action.meta.arg?.page || 1,
+      }
+      if (action.payload.length < 1) state.entityMeta.end = true;
+      // update entities data
+      if (action.meta.arg?.page > 1) state.entities = [...state.entities, ...action.payload];
+      else state.entities = action.payload;
       state.activeEntity = null;
     }).addCase(searchEntity.rejected, (state) => {
       state.loading = false;
@@ -512,7 +531,17 @@ export const eavSlice = createSlice({
       state.activeEnType = null;
     }).addCase(searchAttrValue.fulfilled, (state, action) => {
       state.loading = false;
-      state.entities = action.payload;
+      // update meta data
+      state.entityMeta = {
+        fn: fnsWithPaginationEnum.searchAttrValue,
+        attr: action.meta.arg?.attr, 
+        val: action.meta.arg?.val, 
+        page: action.meta.arg?.page || 1,
+      }
+      if (action.payload.length < 1) state.entityMeta.end = true;
+      // update entities data
+      if (action.meta.arg?.page > 1) state.entities = [...state.entities, ...action.payload];
+      else state.entities = action.payload;
       state.activeEntity = null;
     }).addCase(searchAttrValue.rejected, (state) => {
       state.loading = false;
@@ -523,7 +552,18 @@ export const eavSlice = createSlice({
       state.activeEnType = null;
     }).addCase(searchAttrValueComparison.fulfilled, (state, action) => {
       state.loading = false;
-      state.entities = action.payload;
+      // update meta data
+      state.entityMeta = {
+        fn: fnsWithPaginationEnum.searchAttrValueComparison,
+        attr: action.meta.arg?.attr,
+        val: action.meta.arg?.val,
+        op: action.meta.arg?.op,
+        page: action.meta.arg?.page || 1,
+      }
+      if (action.payload.length < 1) state.entityMeta.end = true;
+      // update entities data
+      if (action.meta.arg?.page > 1) state.entities = [...state.entities, ...action.payload];
+      else state.entities = action.payload;
       state.activeEntity = null;
     }).addCase(searchAttrValueComparison.rejected, (state) => {
       state.loading = false;
@@ -543,6 +583,8 @@ export const {
   setActiveEntity,
   toggleShowDel,
   toggleShowHelp,
+  scrollToTop,
+  resetScrollToTop,
 } = eavSlice.actions;
 
 export default eavSlice.reducer;

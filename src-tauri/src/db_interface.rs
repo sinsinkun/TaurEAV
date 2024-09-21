@@ -179,7 +179,7 @@ impl DBInterface {
 
 	pub async fn search_entity_with_alt_title(&self, regex: String, page: u32) -> Result<Vec<EavEntity>, sqlx::Error> {
 		let pool = self.get_pool()?;
-		let query = "SELECT ee.* from eav_entities ee ".to_owned() +
+		let query = "SELECT DISTINCT ee.* from eav_entities ee ".to_owned() +
 			"LEFT JOIN eav_attrs ea ON (ee.entity_type_id = ea.entity_type_id AND ea.attr = ?) " +
 			"LEFT JOIN eav_values ev ON (ev.entity_id = ee.id AND ev.attr_id = ea.id) " +
 			"WHERE ee.entity REGEXP ? OR ev.value_str REGEXP ?" +
@@ -225,7 +225,8 @@ impl DBInterface {
 			}
 		}
 		ent_ids.pop();
-		let query = "SELECT * FROM eav_entities WHERE id IN (".to_owned() + &ent_ids + ")";
+		if ent_ids.len() < 1 { return Ok(Vec::new()); }
+		let query = "SELECT DISTINCT * FROM eav_entities WHERE id IN (".to_owned() + &ent_ids + ")";
 		let rows = sqlx::query_as::<_, EavEntity>(&query).fetch_all(pool).await?;
 		println!("search_entity_with_attr_value: {} results", rows.len());
 		Ok(rows)
@@ -243,7 +244,8 @@ impl DBInterface {
 			}
 		}
 		ent_ids.pop();
-		let query = "SELECT * FROM eav_entities WHERE id IN (".to_owned() + &ent_ids + ")";
+		if ent_ids.len() < 1 { return Ok(Vec::new()); }
+		let query = "SELECT DISTINCT * FROM eav_entities WHERE id IN (".to_owned() + &ent_ids + ")";
 		let rows = sqlx::query_as::<_, EavEntity>(&query).fetch_all(pool).await?;
 		println!("search_entity_with_attr_value_comparison: {} results", rows.len());
 		Ok(rows)
